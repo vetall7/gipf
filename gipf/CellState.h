@@ -2,6 +2,8 @@
 
 enum class CellState {
     Empty,
+    Space,
     Black,
-    White
+    White,
+    None
 };

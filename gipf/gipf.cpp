@@ -15,19 +15,19 @@ int main()
     cout << endl;
     Game game (size*2);
     char zn;
-    cin >> zn;
-    int i = 0, j = 0, przesun = size - 1;
-    while (i != size*2 - 1) {
+    //cin >> zn;
+    int i = 0, j = 0, left_space = size - 1, right_space = size - 1 + size;
+    while (i != size*2) {
         zn = getchar();
         if (zn == '\n') {
             i++;
             j = 0;
             continue;
         }
-        else if (zn == ' ' && j < przesun) {
-            game.SetCell(j, i, CellState::Empty);
+       if (zn == ' ' && (j < left_space || j >= right_space)) {
+            game.SetCell(j, i, CellState::Space);
         }
-        else if (zn == '-') {
+        else if (zn == '_') {
             game.SetCell(j, i, CellState::Empty);
         }
         else if (zn == 'W') {
@@ -38,10 +38,12 @@ int main()
         }
         j++;
         if (i <= size) {
-            przesun--;
+            left_space--;
+            right_space++;
         }
         else if (i > size) {
-            przesun++;
+            left_space++;
+            right_space--;
         }
     }
 
