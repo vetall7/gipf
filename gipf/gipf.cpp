@@ -33,8 +33,20 @@ void read_command(string &command, Game& game){
         cin >> from >> to;
         string input;
         getline(std::cin, input);
-
-        game.DoMove(from, to);
+        std::vector<std::string> words;
+        std::string currentWord;
+        for (char c : input) {
+            if (c == ' ') {
+                if (!currentWord.empty()) {
+                    words.push_back(currentWord);
+                    currentWord.clear();
+                }
+            }
+            else {
+                currentWord += c;
+            }
+        }
+        game.DoMove(from, to, words);
     }
     else {
         cout << "NO COMMAND" << endl;

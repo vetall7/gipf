@@ -38,6 +38,6 @@ public:
     void SetPlayers(Player& first, Player& second);
     void SetSize(int size);
     int GetSize();
-    void DoMove(string from, string to);
+    void DoMove(string from, string to, vector<string>& delete_points);
     void SetTurn(bool turn);
 };

@@ -186,7 +186,7 @@ void Game::DirectionDetect(string from, string to)
     }
 }
 
-void Game::DoMove(string from, string to)
+void Game::DoMove(string from, string to, vector<string>& delete_points)
 {
     vector<string>  coordinates;
     bool is_move = false;
@@ -200,8 +200,15 @@ void Game::DoMove(string from, string to)
         int x_to, y_to;
         ConvertCoordinate(to, x_to, y_to);
         DirectionDetect(from, to);
-        cout << direction << endl;
         Move(x_to, y_to);
+        if (delete_points.size() >= 4) {
+            for (string i : delete_points) {
+                cout << i << endl;
+                int x, y;
+                ConvertCoordinate(i, x, y);
+                board[y][x] = CellState::Empty;
+            }
+        }
     }
     else {
         cout << "YOU CANT DO THIS MOVE" << endl;
