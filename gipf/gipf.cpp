@@ -18,10 +18,23 @@ void read_command(string &command, Game& game){
         game.SetPlayers(white, black);
         game.SetSize(size);
         game.ReadBoard(game.GetSize());
+        if (first_player == 'W') {
+            game.SetTurn(true);
+        }
+        else {
+            game.SetTurn(false);
+        }
     }
     else if (command == "PRINT_GAME_BOARD") {
-        system("cls");
         game.DrawWorld();
+    }
+    else if (command == "DO_MOVE") {
+        string from, to;
+        cin >> from >> to;
+        string input;
+        getline(std::cin, input);
+
+        game.DoMove(from, to);
     }
     else {
         cout << "NO COMMAND" << endl;
