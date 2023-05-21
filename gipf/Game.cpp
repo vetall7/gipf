@@ -104,7 +104,7 @@ int Game::GetSize()
 }
 
 
-void Game::Transfer(int x, int y)
+void Game::Transfer(int x, int y, vector<Point>& line)
 {
     int rangeX = 0, rangeY = 0;
     if (direction == Right) {
@@ -129,6 +129,7 @@ void Game::Transfer(int x, int y)
     }
     int x_temp = x + rangeX;
     int y_temp = y + rangeY;
+    line.push_back(Point(x_temp, y_temp));
     while (board[y_temp][x_temp] != CellState::Empty) {
         x_temp += rangeX;
         y_temp += rangeY;
@@ -136,6 +137,7 @@ void Game::Transfer(int x, int y)
             cout << "YOU CANT" << endl;
             return;
         }
+        line.push_back(Point(x_temp, y_temp));
     }
     while (x_temp != x) {
         board[y_temp][x_temp] = board[y_temp - rangeY][x_temp - rangeX];
@@ -144,11 +146,78 @@ void Game::Transfer(int x, int y)
     }
 }
 
+bool Game::IsLine(vector<Point>& line)
+{
+    if (line.size() >= 4) {
+        for (int i = 0; i < 3; i++) {
+            if (board[line[i].GetY()][line[i].GetX()] != board[line[i + 1].GetY()][line[i + 1].GetX()]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+void Game::CheckLeftLine(vector<Point>& line_left, Point& i)
+{
+    int y_temp = i.GetY() - 1, x_temp = i.GetX() - 1;
+    while (y_temp >= 0 && x_temp >= 0 && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::None) {
+        line_left.push_back(Point(x_temp, y_temp));
+        y_temp--;
+        x_temp--;
+    }
+    y_temp = i.GetY() + 1, x_temp = i.GetX() + 1;
+    while (y_temp < board.size() && x_temp < board[0].size() && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::None) {
+        line_left.push_back(Point(x_temp, y_temp));
+        y_temp++;
+        x_temp++;
+    }
+}
+
+void Game::CheckRightLine( vector<Point>& line_right, Point& i)
+{
+    int y_temp = i.GetY() - 1, x_temp = i.GetX() + 1;
+    while (y_temp >= 0 && x_temp < board[0].size() && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::None) {
+        line_right.push_back(Point(x_temp, y_temp));
+        y_temp--;
+        x_temp++;
+    }
+    y_temp = i.GetY() + 1, x_temp = i.GetX() - 1;
+    while (y_temp < board.size() && x_temp >= 0 && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::None) {
+        line_right.push_back(Point(x_temp, y_temp));
+        y_temp++;
+        x_temp--;
+    }
+
+    for (Point i : line_right) {
+        cout << i.GetX() << " " << i.GetY() << endl;
+    }
+    cout << endl;
+}
+
+void Game::CheckHorizontalLine(vector<Point>& horizontal_line, Point& i)
+{
+    int y_temp = i.GetY(), x_temp = i.GetX() - 2;
+    while (x_temp >= 0 && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::None) {
+        horizontal_line.push_back(Point(x_temp, y_temp));
+        x_temp -= 2;
+    }
+    y_temp = i.GetY(), x_temp = i.GetX() + 2;
+    while (x_temp < board[y_temp].size() && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::None) {
+        horizontal_line.push_back(Point(x_temp, y_temp));
+        x_temp += 2;
+    }
+}
+
 void Game::Move(int x, int y)
 {
+    vector <Point> line;
+    line.push_back(Point(x, y));
     if (board[y][x] != CellState::Empty) {
-        Transfer(x, y);
+        Transfer(x, y, line);
     }
+
     if (is_white_turn) {
         board[y][x] = CellState::White;
         is_white_turn = false;
@@ -157,6 +226,47 @@ void Game::Move(int x, int y)
         board[y][x] = CellState::Black;
         is_white_turn = true;
     }
+    
+    int lines_counter = 0;
+
+    for (Point i : line) {
+        vector<Point> line_left;
+        vector<Point> line_right;
+        line_left.push_back(Point(i.GetX(), i.GetY()));
+        line_right.push_back(Point(i.GetX(), i.GetY()));
+        if (direction == Right || direction == Left) {
+            CheckLeftLine(line_left, i);
+            CheckRightLine(line_right, i);
+     
+            if (IsLine(line_left)) {
+                lines_counter++;
+            }
+            if (IsLine(line_right)) {
+                lines_counter++;
+            }
+        }
+        else if (direction == RightDown || direction == LeftUp) {
+            CheckHorizontalLine(line_left, i);
+            CheckRightLine(line_right, i);
+            if (IsLine(line_left)) {
+                lines_counter++;
+            }
+            if (IsLine(line_right)) {
+                lines_counter++;
+            }
+        }
+        else if (direction == LeftDown || direction == RightUp) {
+            CheckHorizontalLine(line_right, i);
+            CheckLeftLine(line_left, i);
+            if (IsLine(line_left)) {
+                lines_counter++;
+            }
+            if (IsLine(line_right)) {
+                lines_counter++;
+            }
+        }
+    }
+    cout << lines_counter << endl;
 }
 
 
@@ -201,14 +311,6 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
         ConvertCoordinate(to, x_to, y_to);
         DirectionDetect(from, to);
         Move(x_to, y_to);
-        if (delete_points.size() >= 4) {
-            for (string i : delete_points) {
-                cout << i << endl;
-                int x, y;
-                ConvertCoordinate(i, x, y);
-                board[y][x] = CellState::Empty;
-            }
-        }
     }
     else {
         cout << "YOU CANT DO THIS MOVE" << endl;

@@ -6,6 +6,21 @@
 #include "CellState.h"
 using namespace std;
 
+class Point {
+    int x, y;
+public: 
+    Point(int x, int y) {
+        this->x = x;
+        this->y = y;
+    }
+    int GetX(){
+        return x;
+    }
+    int GetY() {
+        return y;
+    }
+};
+
 enum Direction {
     Right,
     Left,
@@ -27,7 +42,11 @@ private:
     void GenerateMoves(vector<string>& coordinates, string& from);
     void Move(int x, int y);
     void DirectionDetect(string from, string to);
-    void Transfer(int x, int y);
+    void Transfer(int x, int y, vector<Point>& line);
+    bool IsLine(vector<Point>& line);
+    void CheckLeftLine(vector<Point>& left_line, Point& i);
+    void CheckRightLine(vector<Point>& right_line, Point& i);
+    void CheckHorizontalLine(vector<Point>& horizontal_line, Point& i);
     Direction direction;
 public:
     Game();
