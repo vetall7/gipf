@@ -148,13 +148,30 @@ void Game::Transfer(int x, int y, vector<Point>& line)
 
 bool Game::IsLine(vector<Point>& line)
 {
-    if (line.size() >= 4) {
+    /*if (line.size() >= 4) {
         for (int i = 0; i < 3; i++) {
             if (board[line[i].GetY()][line[i].GetX()] != board[line[i + 1].GetY()][line[i + 1].GetX()]) {
                 return false;
             }
         }
         return true;
+    }
+    return false;*/
+    if (line.size() >= 4) {
+        for (int i = 0; i < line.size(); i++) {
+            int counter = 1;
+            for (int j = i+1; j < i+4; j++) {
+                if (j < line.size() && board[line[i].GetY()][line[i].GetX()] == board[line[j].GetY()][line[j].GetX()]) {
+                    counter++;
+                }
+                else {
+                    break;
+                }
+            }
+            if (counter >= 4) {
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -177,13 +194,15 @@ void Game::CheckLeftLine(vector<Point>& line_left, Point& i)
 
 void Game::CheckRightLine( vector<Point>& line_right, Point& i)
 {
-    int y_temp = i.GetY() - 1, x_temp = i.GetX() + 1;
+    int y_temp = i.GetY(), x_temp = i.GetX();
     while (y_temp >= 0 && x_temp < board[0].size() && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
-        line_right.push_back(Point(x_temp, y_temp));
+        //line_right.push_back(Point(x_temp, y_temp));
         y_temp--;
         x_temp++;
     }
-    y_temp = i.GetY() + 1, x_temp = i.GetX() - 1;
+    //y_temp = i.GetY() + 1, x_temp = i.GetX() - 1;
+    x_temp--;
+    y_temp++;
     while (y_temp < board.size() && x_temp >= 0 && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
         line_right.push_back(Point(x_temp, y_temp));
         y_temp++;
@@ -198,12 +217,13 @@ void Game::CheckRightLine( vector<Point>& line_right, Point& i)
 
 void Game::CheckHorizontalLine(vector<Point>& horizontal_line, Point& i)
 {
-    int y_temp = i.GetY(), x_temp = i.GetX() - 2;
+    int y_temp = i.GetY(), x_temp = i.GetX();
     while (x_temp >= 0 && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
-        horizontal_line.push_back(Point(x_temp, y_temp));
+        //horizontal_line.push_back(Point(x_temp, y_temp));
         x_temp -= 2;
     }
-    y_temp = i.GetY(), x_temp = i.GetX() + 2;
+    x_temp += 2;
+    //y_temp = i.GetY(), x_temp = i.GetX() + 2;
     while (x_temp < board[y_temp].size() && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
         horizontal_line.push_back(Point(x_temp, y_temp));
         x_temp += 2;
@@ -226,15 +246,19 @@ void Game::Move(int x, int y)
         board[y][x] = CellState::Black;
         is_white_turn = true;
     }
-    
-    int lines_counter = 0;
     vector<vector<Point>> lines_to_delete;
+    bool is_checked = false;
     for (Point i : line) {
         vector<Point> line_left;
         vector<Point> line_right;
+        vector<Point> line_horizontal;
         line_left.push_back(Point(i.GetX(), i.GetY()));
+        line_horizontal.push_back(Point(i.GetX(), i.GetY()));
         line_right.push_back(Point(i.GetX(), i.GetY()));
         if (direction == Right || direction == Left) {
+            if (!is_checked) {
+                CheckHorizontalLine(line_horizontal, i);
+            }
             CheckLeftLine(line_left, i);
             CheckRightLine(line_right, i);
 
@@ -244,8 +268,15 @@ void Game::Move(int x, int y)
             if (IsLine(line_right)) {
                 lines_to_delete.push_back(line_right);
             }
+            if (IsLine(line_horizontal)) {
+                lines_to_delete.push_back(line_horizontal);
+                is_checked = true;
+            }
         }
         else if (direction == RightDown || direction == LeftUp) {
+            if (!is_checked) {
+                CheckLeftLine(line_horizontal, i);
+            }
             CheckHorizontalLine(line_left, i);
             CheckRightLine(line_right, i);
             if (IsLine(line_left)) {
@@ -254,8 +285,15 @@ void Game::Move(int x, int y)
             if (IsLine(line_right)) {
                 lines_to_delete.push_back(line_right);
             }
+            if (IsLine(line_horizontal)) {
+                lines_to_delete.push_back(line_horizontal);
+                is_checked = true;
+            }
         }
         else if (direction == LeftDown || direction == RightUp) {
+            if (!is_checked) {
+                CheckRightLine(line_horizontal, i);
+            }
             CheckHorizontalLine(line_right, i);
             CheckLeftLine(line_left, i);
             if (IsLine(line_left)) {
@@ -264,8 +302,13 @@ void Game::Move(int x, int y)
             if (IsLine(line_right)) {
                 lines_to_delete.push_back(line_right);
             }
+            if (IsLine(line_horizontal)) {
+                lines_to_delete.push_back(line_horizontal);
+                is_checked = true;
+            }
         }
     }
+    
     if (lines_to_delete.size() == 1) {
         for (Point i : lines_to_delete[0]) {
             board[i.GetY()][i.GetX()] = CellState::Empty;
