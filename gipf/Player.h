@@ -11,5 +11,7 @@ public:
 	int GetReserveStones();
 	Player(int stones, int reserve_stones);
 	Player() = default;
+	void StonesDecrease(int o);
+	void StonesIncrease(int o);
 };
 

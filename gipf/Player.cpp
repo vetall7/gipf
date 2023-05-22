@@ -24,3 +24,13 @@ Player::Player(int stones, int reserve_stones) : stones(stones), reserve_stones(
 {
 
 }
+
+void Player::StonesDecrease(int o)
+{
+	reserve_stones -= o;
+}
+
+void Player::StonesIncrease(int o)
+{
+	reserve_stones += o;
+}

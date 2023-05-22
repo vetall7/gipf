@@ -71,7 +71,7 @@ private:
     int stones_in_line;
     void ConvertCoordinate(string coo, int& x, int& y);
     void GenerateMoves(vector<string>& coordinates, string& from);
-    void Move(int x, int y, vector<Point>& to_delete);
+    void Move(int x, int y, vector<vector<Point>>& to_delete);
     void DirectionDetect(string from, string to);
     void Transfer(int x, int y, vector<Point>& line);
     bool IsLine(vector<Point>& line);
