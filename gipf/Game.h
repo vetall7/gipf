@@ -13,11 +13,40 @@ public:
         this->x = x;
         this->y = y;
     }
-    int GetX(){
+    int GetX() const{
         return x;
     }
-    int GetY() {
+    int GetY() const{
         return y;
+    }
+    bool operator==(const Point& rhs) const {
+        return this->GetX() == rhs.GetX() && this->GetY() == rhs.GetY();
+    }
+    bool operator<(const Point& rhs) const {
+        if (x < rhs.x) {
+            return true;
+        }
+        else if (x == rhs.x) {
+            return y < rhs.y;
+        }
+        return false;
+    }
+    bool operator>(const Point& rhs) const {
+        if (x > rhs.x) {
+            return true;
+        }
+        else if (x == rhs.x) {
+            return y > rhs.y;
+        }
+        return false;
+    }
+    Point& operator=(const Point& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
+        x = rhs.x;
+        y = rhs.y;
+        return *this;
     }
 };
 
@@ -36,11 +65,13 @@ private:
     vector<vector<CellState>> board;
     Player WhitePlayer;
     Player BlackPlayer;
+    string game_state;
     bool is_white_turn;
     int size;
+    int stones_in_line;
     void ConvertCoordinate(string coo, int& x, int& y);
     void GenerateMoves(vector<string>& coordinates, string& from);
-    void Move(int x, int y);
+    void Move(int x, int y, vector<Point>& to_delete);
     void DirectionDetect(string from, string to);
     void Transfer(int x, int y, vector<Point>& line);
     bool IsLine(vector<Point>& line);
@@ -56,7 +87,9 @@ public:
     void ReadBoard(int size);
     void SetPlayers(Player& first, Player& second);
     void SetSize(int size);
+    void SetStoneLine(int stones);
     int GetSize();
     void DoMove(string from, string to, vector<string>& delete_points);
     void SetTurn(bool turn);
+    void PrintState();
 };

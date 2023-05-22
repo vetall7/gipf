@@ -1,13 +1,16 @@
 #include "Game.h"
 #include <iostream>
+#include <algorithm>
 
 Game::Game()
 {
+    game_state = "in_progress";
 }
 
 Game::Game(int size, Player& first, Player& second) : WhitePlayer (first), BlackPlayer(second)
 {
     board.resize(size);
+    game_state = "in_progress";
 }
 
 void Game::SetCell(int x, int y, CellState cell)
@@ -98,6 +101,11 @@ void Game::SetSize(int size)
     this->size = size;
 }
 
+void Game::SetStoneLine(int stones)
+{
+    stones_in_line = stones;
+}
+
 int Game::GetSize()
 {
     return size;
@@ -148,19 +156,10 @@ void Game::Transfer(int x, int y, vector<Point>& line)
 
 bool Game::IsLine(vector<Point>& line)
 {
-    /*if (line.size() >= 4) {
-        for (int i = 0; i < 3; i++) {
-            if (board[line[i].GetY()][line[i].GetX()] != board[line[i + 1].GetY()][line[i + 1].GetX()]) {
-                return false;
-            }
-        }
-        return true;
-    }
-    return false;*/
-    if (line.size() >= 4) {
+    if (line.size() >= stones_in_line) {
         for (int i = 0; i < line.size(); i++) {
             int counter = 1;
-            for (int j = i+1; j < i+4; j++) {
+            for (int j = i+1; j < i+stones_in_line; j++) {
                 if (j < line.size() && board[line[i].GetY()][line[i].GetX()] == board[line[j].GetY()][line[j].GetX()]) {
                     counter++;
                 }
@@ -168,7 +167,7 @@ bool Game::IsLine(vector<Point>& line)
                     break;
                 }
             }
-            if (counter >= 4) {
+            if (counter >= stones_in_line) {
                 return true;
             }
         }
@@ -178,15 +177,20 @@ bool Game::IsLine(vector<Point>& line)
 
 void Game::CheckLeftLine(vector<Point>& line_left, Point& i)
 {
-    int y_temp = i.GetY() - 1, x_temp = i.GetX() - 1;
+    int y_temp = i.GetY(), x_temp = i.GetX();
     while (y_temp >= 0 && x_temp >= 0 && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
-        line_left.push_back(Point(x_temp, y_temp));
+        //line_left.push_back(Point(x_temp, y_temp));
         y_temp--;
         x_temp--;
     }
-    y_temp = i.GetY() + 1, x_temp = i.GetX() + 1;
+    y_temp++;
+    x_temp++;
+    //y_temp = i.GetY() + 1, x_temp = i.GetX() + 1;
     while (y_temp < board.size() && x_temp < board[0].size() && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
-        line_left.push_back(Point(x_temp, y_temp));
+        Point temp(x_temp, y_temp);
+        if (!(temp == i)) {
+            line_left.push_back(Point(x_temp, y_temp));
+        }
         y_temp++;
         x_temp++;
     }
@@ -204,15 +208,13 @@ void Game::CheckRightLine( vector<Point>& line_right, Point& i)
     x_temp--;
     y_temp++;
     while (y_temp < board.size() && x_temp >= 0 && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
-        line_right.push_back(Point(x_temp, y_temp));
+        Point temp(x_temp, y_temp);
+        if (!(temp == i)) {
+            line_right.push_back(Point(x_temp, y_temp));
+        }
         y_temp++;
         x_temp--;
     }
-
-    for (Point i : line_right) {
-        cout << i.GetX() << " " << i.GetY() << endl;
-    }
-    cout << endl;
 }
 
 void Game::CheckHorizontalLine(vector<Point>& horizontal_line, Point& i)
@@ -225,12 +227,40 @@ void Game::CheckHorizontalLine(vector<Point>& horizontal_line, Point& i)
     x_temp += 2;
     //y_temp = i.GetY(), x_temp = i.GetX() + 2;
     while (x_temp < board[y_temp].size() && board[y_temp][x_temp] != CellState::Empty && board[y_temp][x_temp] != CellState::Space) {
-        horizontal_line.push_back(Point(x_temp, y_temp));
+        Point temp(x_temp, y_temp);
+        if (!(temp == i)) {
+            horizontal_line.push_back(Point(x_temp, y_temp));
+        }
         x_temp += 2;
     }
 }
 
-void Game::Move(int x, int y)
+
+bool checkSameElements(const std::vector<Point>& vector1, const std::vector<Point>& vector2) {
+    if (vector1.size() != vector2.size()) {
+        return false;
+    }
+
+    auto sortFunc = [](const Point& p1, const Point& p2) {
+        if (p1.GetX() < p2.GetX()) {
+            return true;
+        }
+        else if (p1.GetX() == p2.GetX()) {
+            return p1.GetY() < p2.GetY();
+        }
+        return false;
+    };
+
+    std::vector<Point> sortedVector1 = vector1;
+    std::vector<Point> sortedVector2 = vector2;
+    std::sort(sortedVector1.begin(), sortedVector1.end(), sortFunc);
+    std::sort(sortedVector2.begin(), sortedVector2.end(), sortFunc);
+
+    return std::equal(sortedVector1.begin(), sortedVector1.end(), sortedVector2.begin());
+}
+
+
+void Game::Move(int x, int y, vector <Point>& to_delete)
 {
     vector <Point> line;
     line.push_back(Point(x, y));
@@ -313,6 +343,14 @@ void Game::Move(int x, int y)
         for (Point i : lines_to_delete[0]) {
             board[i.GetY()][i.GetX()] = CellState::Empty;
         }
+    }else if (lines_to_delete.size() != 0){
+        for (vector<Point> i : lines_to_delete) {
+            if (checkSameElements(i, to_delete)){
+                for (Point j : to_delete) {
+                    board[j.GetY()][j.GetX()] = CellState::Empty;
+                }
+            }
+        }
     }
 }
 
@@ -345,7 +383,15 @@ void Game::DirectionDetect(string from, string to)
 
 void Game::DoMove(string from, string to, vector<string>& delete_points)
 {
-    vector<string>  coordinates;
+    vector<Point> to_delete;
+    int x, y;
+    if (delete_points.size() >= stones_in_line) {
+        for (string i : delete_points) {
+            ConvertCoordinate(i, x, y);
+            to_delete.push_back(Point(x, y));
+        }
+    }
+    vector<string> coordinates;
     bool is_move = false;
     GenerateMoves(coordinates, from);
     for (string i : coordinates) {
@@ -357,7 +403,7 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
         int x_to, y_to;
         ConvertCoordinate(to, x_to, y_to);
         DirectionDetect(from, to);
-        Move(x_to, y_to);
+        Move(x_to, y_to, to_delete);
     }
     else {
         cout << "YOU CANT DO THIS MOVE" << endl;
@@ -367,6 +413,11 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
 void Game::SetTurn(bool turn)
 {
     is_white_turn = turn;
+}
+
+void Game::PrintState()
+{
+    cout << game_state << endl;
 }
 
 void Game::ConvertCoordinate(string coo, int &x, int &y)

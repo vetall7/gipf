@@ -17,6 +17,7 @@ void read_command(string &command, Game& game){
         Player black(black_stones, black_reserves);
         game.SetPlayers(white, black);
         game.SetSize(size);
+        game.SetStoneLine(length);
         game.ReadBoard(game.GetSize());
         if (first_player == 'W') {
             game.SetTurn(true);
@@ -47,6 +48,10 @@ void read_command(string &command, Game& game){
             }
         }
         game.DoMove(from, to, words);
+        game.DrawWorld();
+    }
+    else if (command == "PRINT_GAME_STATE") {
+        game.PrintState();
     }
     else {
         cout << "NO COMMAND" << endl;
