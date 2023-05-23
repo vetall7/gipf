@@ -30,8 +30,24 @@ void read_command(string &command, Game& game){
         game.DrawWorld();
     }
     else if (command == "DO_MOVE") {
-        string from, to;
-        cin >> from >> to;
+        string from, to, line;
+        //cin >> from >> to;
+        std::getline(std::cin, line, ' ');
+        bool is = true;
+        for (char i : line) {
+            if (i == '-') {
+                is = false;
+            }
+            else {
+                if (is) {
+                    from += i;
+                }
+                else {
+                    to += i;
+                }
+            }
+        }
+        cout << from << " " << to << endl;
         string input;
         getline(std::cin, input);
         std::vector<std::string> words;
@@ -47,6 +63,7 @@ void read_command(string &command, Game& game){
                 currentWord += c;
             }
         }
+        cout << to << " " << from << endl;
         game.DoMove(from, to, words);
         game.DrawWorld();
     }
@@ -66,4 +83,5 @@ int main()
         cin >> command;
         read_command(command, game);
     }
+    return 0;
 }

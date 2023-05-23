@@ -86,6 +86,7 @@ void Game::ReadBoard(int size)
     int i = 0, j = 0;
     zn = getchar();
     int black_counter = 0, white_counter = 0;
+    char e = zn;
     while (i != size * 2 - 1) {
         zn = getchar();
         if (zn == '\n') {
@@ -114,6 +115,10 @@ void Game::ReadBoard(int size)
             black_counter++;
         }
         j++;
+        e = zn;
+        if (zn == EOF){
+            break;
+        }
     }
     if (white_counter + WhitePlayer.GetReserveStones() != WhitePlayer.GetStones()) {
         cout << "WRONG_WHITE_PAWNS_NUMBER" << endl;
@@ -136,6 +141,9 @@ void Game::ReadBoard(int size)
     }
     else {
         cout << "BOARD_STATE_OK" << endl;
+    }
+    if (e == EOF) {
+        exit(0);
     }
 }
 

@@ -1,5 +1,4 @@
 #pragma once
-#include "Stone.h"
 #include "Player.h"
 #include <vector>
 #include <string>
