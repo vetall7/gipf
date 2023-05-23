@@ -50,6 +50,34 @@ void Game::DrawWorld()
     }
     cout << "White counter: " << WhitePlayer.GetReserveStones() << endl;
     cout << "Black counter: " << BlackPlayer.GetReserveStones() << endl;
+    for (vector<CellState> i : board) {
+        cout << i.size() << endl;
+    }
+}
+
+bool Game::BoardCheck()
+{
+    int temp = size;
+    int k = 0;
+    for (vector<CellState> i : board) {
+        int counter = 0;
+        for (CellState j : i) {
+            if (j != CellState::Space) {
+                counter++;
+            }
+        }
+        if (counter != temp) {
+            return false;
+        }
+        if (k < size - 1) {
+            temp++;
+        }
+        else {
+            temp--;
+        }
+        k++;
+    }
+    return true;
 }
 
 void Game::ReadBoard(int size)
@@ -61,6 +89,12 @@ void Game::ReadBoard(int size)
     while (i != size * 2 - 1) {
         zn = getchar();
         if (zn == '\n') {
+            if (j <= size * 3) {
+                while (j != size * 3 + 1) {
+                    SetCell(j, i, CellState::Space);
+                    j++;
+                }
+            }
             i++;
             j = 0;
             continue;
@@ -81,14 +115,27 @@ void Game::ReadBoard(int size)
         }
         j++;
     }
-    if (white_counter + WhitePlayer.GetReserveStones() != WhitePlayer.GetStones()
-        || black_counter + BlackPlayer.GetReserveStones() != BlackPlayer.GetStones()) {
-        cout << "the number of stones does not match!!!!!" << endl;
+    if (white_counter + WhitePlayer.GetReserveStones() != WhitePlayer.GetStones()) {
+        cout << "WRONG_WHITE_PAWNS_NUMBER" << endl;
         for (auto& innerVector : board) {
             innerVector.clear();
         }
         board.clear();
         board.resize(0);
+    }
+    else if (black_counter + BlackPlayer.GetReserveStones() != BlackPlayer.GetStones()) {
+        cout << "WRONG_BLACK_PAWNS_NUMBER" << endl;
+        for (auto& innerVector : board) {
+            innerVector.clear();
+        }
+        board.clear();
+        board.resize(0);
+    }
+    else if (!BoardCheck()) {
+        cout << "WRONG_BOARD_ROW_LENGTH" << endl;
+    }
+    else {
+        cout << "BOARD_STATE_OK" << endl;
     }
 }
 
@@ -231,6 +278,19 @@ void Game::CheckHorizontalLine(vector<Point>& horizontal_line, Point& i)
     }
 }
 
+void SortVector(vector<Point>& vec) {
+    auto sortFunc = [](const Point& p1, const Point& p2) {
+        if (p1.GetX() < p2.GetX()) {
+            return true;
+        }
+        else if (p1.GetX() == p2.GetX()) {
+            return p1.GetY() < p2.GetY();
+        }
+        return false;
+    };
+
+    std::sort(vec.begin(), vec.end(), sortFunc);
+}
 
 bool checkSameElements(const std::vector<Point>& vector1, const std::vector<Point>& vector2) {
     if (vector1.size() != vector2.size()) {
@@ -254,7 +314,6 @@ bool checkSameElements(const std::vector<Point>& vector1, const std::vector<Poin
 
     return std::equal(sortedVector1.begin(), sortedVector1.end(), sortedVector2.begin());
 }
-
 
 void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
 {
@@ -290,7 +349,9 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             }
             CheckLeftLine(line_left, i);
             CheckRightLine(line_right, i);
-
+            SortVector(line_horizontal);
+            SortVector(line_left);
+            SortVector(line_right);
             if (IsLine(line_left)) {
                 lines_to_delete.push_back(line_left);
             }
@@ -308,6 +369,9 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             }
             CheckHorizontalLine(line_left, i);
             CheckRightLine(line_right, i);
+            SortVector(line_horizontal);
+            SortVector(line_left);
+            SortVector(line_right);
             if (IsLine(line_left)) {
                 lines_to_delete.push_back(line_left);
             }
@@ -325,6 +389,10 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             }
             CheckHorizontalLine(line_right, i);
             CheckLeftLine(line_left, i);
+            SortVector(line_horizontal);
+            SortVector(line_left);
+            SortVector(line_right);
+            checkSameElements(line_left, line_right);
             if (IsLine(line_left)) {
                 lines_to_delete.push_back(line_left);
             }

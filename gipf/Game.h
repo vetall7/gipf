@@ -78,6 +78,7 @@ private:
     void CheckLeftLine(vector<Point>& left_line, Point& i);
     void CheckRightLine(vector<Point>& right_line, Point& i);
     void CheckHorizontalLine(vector<Point>& horizontal_line, Point& i);
+    bool BoardCheck();
     Direction direction;
 public:
     Game();
