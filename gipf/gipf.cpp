@@ -31,25 +31,21 @@ void read_command(string &command, Game& game){
     }
     else if (command == "DO_MOVE") {
         string from, to, line;
-        //cin >> from >> to;
-        std::getline(std::cin, line, ' ');
-        bool is = true;
-        for (char i : line) {
-            if (i == '-') {
-                is = false;
-            }
-            else {
-                if (is) {
-                    from += i;
-                }
-                else {
-                    to += i;
-                }
-            }
+        char temp = getchar();
+        temp = getchar();
+        while (temp != ' ' && temp != '\n'){
+            line += temp;
+            temp = getchar();
         }
-        cout << from << " " << to << endl;
+        size_t delimiterPos = line.find('-');
+        if (delimiterPos != std::string::npos) {
+            from = line.substr(0, delimiterPos);
+            to = line.substr(delimiterPos + 1);
+        }
         string input;
-        getline(std::cin, input);
+        if (temp != '\n') {
+            getline(std::cin, input);
+        }
         std::vector<std::string> words;
         std::string currentWord;
         for (char c : input) {
@@ -63,9 +59,7 @@ void read_command(string &command, Game& game){
                 currentWord += c;
             }
         }
-        cout << to << " " << from << endl;
         game.DoMove(from, to, words);
-        game.DrawWorld();
     }
     else if (command == "PRINT_GAME_STATE") {
         game.PrintState();
@@ -78,10 +72,12 @@ void read_command(string &command, Game& game){
 int main()
 {
     Game game;
-    while (1) {
-        string command;
-        cin >> command;
+    string command;
+    while (cin >> command) {
         read_command(command, game);
+        if (cin.eof()) {
+            break;
+        }
     }
     return 0;
 }

@@ -65,7 +65,7 @@ private:
     Player WhitePlayer;
     Player BlackPlayer;
     string game_state;
-    bool is_white_turn;
+    bool is_white_turn, is_turn_committed;
     int size;
     int stones_in_line;
     void ConvertCoordinate(string coo, int& x, int& y);
@@ -78,6 +78,9 @@ private:
     void CheckRightLine(vector<Point>& right_line, Point& i);
     void CheckHorizontalLine(vector<Point>& horizontal_line, Point& i);
     bool BoardCheck();
+    bool IsGoodCoordinate(string coo, bool is_start);
+    bool IsGoodField(string coo, bool is_start);
+    int isNoDeletedLines();
     Direction direction;
 public:
     Game();

@@ -30,6 +30,14 @@ void Game::DrawWorld()
         cout << "THE BOARD IS EMPTY" << endl;
         return;
     }
+    cout << size << " " << stones_in_line << " " << WhitePlayer.GetStones() << " " << BlackPlayer.GetStones() << endl;
+    cout << WhitePlayer.GetReserveStones() << " " << BlackPlayer.GetReserveStones();
+    if (is_white_turn) {
+        cout << " W" << endl;
+    }
+    else {
+        cout << " B" << endl;
+    }
     cout << endl;
     for (int i = 0; i < board.size(); i++) {
         for (int j = 0; j < board[i].size(); j++) {
@@ -48,12 +56,47 @@ void Game::DrawWorld()
         }
         cout << endl;
     }
-    cout << "White counter: " << WhitePlayer.GetReserveStones() << endl;
-    cout << "Black counter: " << BlackPlayer.GetReserveStones() << endl;
-    for (vector<CellState> i : board) {
-        cout << i.size() << endl;
-    }
 }
+
+
+bool checkSameElements(const vector<Point>& vector1, const vector<Point>& vector2) {
+    if (vector1.size() != vector2.size()) {
+        return false;
+    }
+
+    auto sortFunc = [](const Point& p1, const Point& p2) {
+        if (p1.GetX() < p2.GetX()) {
+            return true;
+        }
+        else if (p1.GetX() == p2.GetX()) {
+            return p1.GetY() < p2.GetY();
+        }
+        return false;
+    };
+
+    std::vector<Point> sortedVector1 = vector1;
+    std::vector<Point> sortedVector2 = vector2;
+    std::sort(sortedVector1.begin(), sortedVector1.end(), sortFunc);
+    std::sort(sortedVector2.begin(), sortedVector2.end(), sortFunc);
+
+    return std::equal(sortedVector1.begin(), sortedVector1.end(), sortedVector2.begin());
+}
+
+
+void SortVector(vector<Point>& vec) {
+    auto sortFunc = [](const Point& p1, const Point& p2) {
+        if (p1.GetX() < p2.GetX()) {
+            return true;
+        }
+        else if (p1.GetX() == p2.GetX()) {
+            return p1.GetY() < p2.GetY();
+        }
+        return false;
+    };
+
+    std::sort(vec.begin(), vec.end(), sortFunc);
+}
+
 
 bool Game::BoardCheck()
 {
@@ -78,6 +121,65 @@ bool Game::BoardCheck()
         k++;
     }
     return true;
+}
+
+
+int Game::isNoDeletedLines()
+{
+    vector<vector<Point>> board_copy;
+    for (int i = 0; i < board.size(); i++) {
+        vector<Point> temp;
+        for (int j = 0; j < board[i].size(); j++) {
+            if (board[i][j] == CellState::White || board[i][j] == CellState::Black || board[i][j] == CellState::Space) {
+                temp.push_back(Point(j, i));
+            }
+        }
+        if (temp.size() >= stones_in_line) {
+            board_copy.push_back(temp);
+        }
+    }
+    for (int i = 0; i < board.size(); i++) {
+        for (int j = 0; j < board[i].size(); j++) {
+            if (board[i][j] != CellState::Space) {
+                vector<Point> temp_left;
+                vector<Point> temp_right;
+                Point k(j, i);
+                if (board[i][j] == CellState::White || board[i][j] == CellState::Black) {
+                    temp_left.push_back(k);
+                    temp_right.push_back(k);
+                }
+                CheckLeftLine(temp_left, k);
+                CheckRightLine(temp_right, k);
+                if (temp_left.size() >= stones_in_line) {
+                    board_copy.push_back(temp_left);
+                }
+                if (temp_right.size() >= stones_in_line) {
+                    board_copy.push_back(temp_right);
+                }
+            }
+        }
+    }
+    int counter = 0;
+    int i = 0;
+    while (i < board_copy.size()) {
+        int j = i + 1;
+        while (j < board_copy.size()) {
+            if (checkSameElements(board_copy[i], board_copy[j])) {
+                board_copy.erase(board_copy.begin() + j);
+            }
+            else {
+                j++;
+            }
+        }
+        i++;
+    }
+
+    for (vector<Point> i : board_copy) {
+        if (IsLine(i)) {
+            counter++;
+        }
+    }
+    return counter;
 }
 
 void Game::ReadBoard(int size)
@@ -120,7 +222,16 @@ void Game::ReadBoard(int size)
             break;
         }
     }
-    if (white_counter + WhitePlayer.GetReserveStones() != WhitePlayer.GetStones()) {
+    int count = isNoDeletedLines();
+    if (count != 0){
+        if (count == 1) {
+            cout << "ERROR_FOUND_" << count << "_ROW_OF_LENGTH_K" << endl;
+        }
+        else {
+            cout << "ERROR_FOUND_" << count << "_ROWS_OF_LENGTH_K" << endl;
+        }
+    }
+    else if (white_counter + WhitePlayer.GetReserveStones() != WhitePlayer.GetStones()) {
         cout << "WRONG_WHITE_PAWNS_NUMBER" << endl;
         for (auto& innerVector : board) {
             innerVector.clear();
@@ -200,6 +311,8 @@ void Game::Transfer(int x, int y, vector<Point>& line)
         y_temp += rangeY;
         if (y_temp < 0 || y_temp >= board.size() || x_temp < 0 || x_temp >= board[y_temp].size() || board[y_temp][x_temp] == CellState::Space) {
             game_state = "bad_move";
+            is_turn_committed = false;
+            cout << "BAD_MOVE_ROW_IS_FULL" << endl;
             return;
         }
         line.push_back(Point(x_temp, y_temp));
@@ -286,42 +399,6 @@ void Game::CheckHorizontalLine(vector<Point>& horizontal_line, Point& i)
     }
 }
 
-void SortVector(vector<Point>& vec) {
-    auto sortFunc = [](const Point& p1, const Point& p2) {
-        if (p1.GetX() < p2.GetX()) {
-            return true;
-        }
-        else if (p1.GetX() == p2.GetX()) {
-            return p1.GetY() < p2.GetY();
-        }
-        return false;
-    };
-
-    std::sort(vec.begin(), vec.end(), sortFunc);
-}
-
-bool checkSameElements(const std::vector<Point>& vector1, const std::vector<Point>& vector2) {
-    if (vector1.size() != vector2.size()) {
-        return false;
-    }
-
-    auto sortFunc = [](const Point& p1, const Point& p2) {
-        if (p1.GetX() < p2.GetX()) {
-            return true;
-        }
-        else if (p1.GetX() == p2.GetX()) {
-            return p1.GetY() < p2.GetY();
-        }
-        return false;
-    };
-
-    std::vector<Point> sortedVector1 = vector1;
-    std::vector<Point> sortedVector2 = vector2;
-    std::sort(sortedVector1.begin(), sortedVector1.end(), sortFunc);
-    std::sort(sortedVector2.begin(), sortedVector2.end(), sortFunc);
-
-    return std::equal(sortedVector1.begin(), sortedVector1.end(), sortedVector2.begin());
-}
 
 void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
 {
@@ -400,7 +477,7 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             SortVector(line_horizontal);
             SortVector(line_left);
             SortVector(line_right);
-            checkSameElements(line_left, line_right);
+            //checkSameElements(line_left, line_right);
             if (IsLine(line_left)) {
                 lines_to_delete.push_back(line_left);
             }
@@ -425,13 +502,34 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             }
             board[i.GetY()][i.GetX()] = CellState::Empty;
         }
-        if (white_counter > black_counter) {
-            WhitePlayer.StonesIncrease(white_counter);
-        }
-        else {
+        if (is_white_turn) {
             BlackPlayer.StonesIncrease(black_counter);
         }
-    }else if (lines_to_delete.size() != 0){
+        else {
+            WhitePlayer.StonesIncrease(white_counter);
+        }
+    }
+    else if (lines_to_delete.size() != 0 && to_delete.size() == 0) {
+        for (vector<Point> i : lines_to_delete) {
+            int white_counter = 0, black_counter = 0;
+            for (Point j : i) {
+                if (board[j.GetY()][j.GetX()] == CellState::White) {
+                    white_counter++;
+                }
+                else {
+                    black_counter++;
+                }
+                board[j.GetY()][j.GetX()] = CellState::Empty;
+            }
+            if (is_white_turn) {
+                BlackPlayer.StonesIncrease(black_counter);
+            }
+            else {
+                WhitePlayer.StonesIncrease(white_counter);
+            }
+        }
+    }
+    else if (lines_to_delete.size() != 0){
         int white_counter = 0, black_counter = 0;
         for (vector<Point> i : lines_to_delete) {
             for (vector<Point> k : to_delete) {
@@ -449,11 +547,11 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
                 }
             }
         }
-        if (white_counter > black_counter) {
-            WhitePlayer.StonesIncrease(white_counter);
+        if (is_white_turn) {
+            BlackPlayer.StonesIncrease(black_counter);
         }
         else {
-            BlackPlayer.StonesIncrease(black_counter);
+            WhitePlayer.StonesIncrease(white_counter);
         }
     }
 }
@@ -485,8 +583,53 @@ void Game::DirectionDetect(string from, string to)
     }
 }
 
+bool Game::IsGoodField(string coo, bool is_start)
+{
+    int x, y;
+    ConvertCoordinate(coo, x, y);
+    if (is_start) {
+        if (x < 0 || y < 0 || x >= size*3-1 || y >= size*2-1) {
+            return true;
+        }
+    }
+    else {
+        if (x < 0 || y < 0) {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
+
+bool Game::IsGoodCoordinate(string coo, bool is_start)
+{
+    if (is_start && coo[0] > 'a' + size*2 ) {
+        return false;
+    }
+    else if (!is_start && coo[0] > 'a' + size*2 - 1) {
+        return false;
+    }
+    int index_x = coo[0] - 'a';
+    int index_y = coo[1] - '0';
+    int max;
+    if (index_x <= size) {
+        max = index_x + size + 1;
+    }
+    else {
+        int max_from_size =  index_x - size;
+        max = size + size + 1 - max_from_size;
+    }
+    if (index_y > max) {
+        return false;
+    }
+    return true;
+}
+
+
 void Game::DoMove(string from, string to, vector<string>& delete_points)
 {
+    is_turn_committed = false;
     vector<vector<Point>> to_delete;
     int x, y;
     if (delete_points.size() >= stones_in_line) {
@@ -508,21 +651,41 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
         }
     }
     vector<string> coordinates;
-    bool is_move = false;
     GenerateMoves(coordinates, from);
     for (string i : coordinates) {
         if (i == to) {
-            is_move = true;
+            is_turn_committed = true;
         }
     }
-    if (is_move) {
+
+    if (!IsGoodCoordinate(from, true)) {
+        cout << "BAD_MOVE_" << from << "_IS_WRONG_INDEX" << endl;
+        return;
+    }
+    else if (!IsGoodCoordinate(to, false)) {
+        cout << "BAD_MOVE_" << to << "_IS_WRONG_INDEX" << endl;
+        return;
+    }
+    if (!IsGoodField(from, true)) {
+        cout << "BAD_MOVE_" << from << "_IS_WRONG_STARTING_FIELD" << endl;
+        return;
+    }else if (!IsGoodField(to, false)) {
+        cout << "BAD_MOVE_" << to << "_IS_WRONG_DESTINATION_FIELD" << endl;
+        return;
+    }
+
+    if (is_turn_committed) {
         int x_to, y_to;
         ConvertCoordinate(to, x_to, y_to);
         DirectionDetect(from, to);
         Move(x_to, y_to, to_delete);
         x = x_to, y = y_to;
+        if (is_turn_committed) {
+            cout << "MOVE_COMMITTED" << endl;
+        }
     }
     else {
+        cout << "UNKNOWN_MOVE_DIRECTION" << endl;
         game_state = "bad_move";
     }
     if (WhitePlayer.GetReserveStones() == 0 && is_white_turn) {
@@ -531,7 +694,7 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
     else if (BlackPlayer.GetReserveStones() == 0 && !is_white_turn) {
         game_state = "white_win";
     }
-    if (game_state == "bad_move") {
+    /*if (game_state == "bad_move") {
         if (board[y][x] == CellState::White) {
             game_state += " <white> ";
         }
@@ -539,7 +702,7 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
             game_state += " <black> ";
         }
         game_state += "<" + from + "-" + to + ">";
-    }
+    }*/
 }
 
 void Game::SetTurn(bool turn)
@@ -574,7 +737,7 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 {
     int index_x = from[0] - 'a';
     int index_y = from[1] - '0';
-    int max = (size * 2 + 1) - (index_x - size); // макситмальное число которое может иметь буква
+    int max = (size * 2 + 1) - (index_x - size); // максимальное число которое может иметь буква
     if (index_y == 1 && index_x >= size) {
         if (index_x == size) {
             coordinates.push_back(string(1, from[0]) + "2");
