@@ -72,7 +72,7 @@ private:
     void GenerateMoves(vector<string>& coordinates, string& from);
     void Move(int x, int y, vector<vector<Point>>& to_delete);
     void DirectionDetect(string from, string to);
-    void Transfer(int x, int y, vector<Point>& line);
+    bool Transfer(int x, int y, vector<Point>& line, bool is_just_checking);
     bool IsLine(vector<Point>& line);
     void CheckLeftLine(vector<Point>& left_line, Point& i);
     void CheckRightLine(vector<Point>& right_line, Point& i);
@@ -81,6 +81,7 @@ private:
     bool IsGoodCoordinate(string coo, bool is_start);
     bool IsGoodField(string coo, bool is_start);
     int isNoDeletedLines();
+    void AllMoves();
     Direction direction;
 public:
     Game();

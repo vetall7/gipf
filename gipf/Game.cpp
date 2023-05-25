@@ -128,33 +128,28 @@ int Game::isNoDeletedLines()
 {
     vector<vector<Point>> board_copy;
     for (int i = 0; i < board.size(); i++) {
-        vector<Point> temp;
-        for (int j = 0; j < board[i].size(); j++) {
-            if (board[i][j] == CellState::White || board[i][j] == CellState::Black || board[i][j] == CellState::Space) {
-                temp.push_back(Point(j, i));
-            }
-        }
-        if (temp.size() >= stones_in_line) {
-            board_copy.push_back(temp);
-        }
-    }
-    for (int i = 0; i < board.size(); i++) {
         for (int j = 0; j < board[i].size(); j++) {
             if (board[i][j] != CellState::Space) {
                 vector<Point> temp_left;
                 vector<Point> temp_right;
+                vector<Point> temp_hor;
                 Point k(j, i);
                 if (board[i][j] == CellState::White || board[i][j] == CellState::Black) {
                     temp_left.push_back(k);
                     temp_right.push_back(k);
+                    temp_hor.push_back(k);
                 }
                 CheckLeftLine(temp_left, k);
                 CheckRightLine(temp_right, k);
+                CheckHorizontalLine(temp_hor, k);
                 if (temp_left.size() >= stones_in_line) {
                     board_copy.push_back(temp_left);
                 }
                 if (temp_right.size() >= stones_in_line) {
                     board_copy.push_back(temp_right);
+                }
+                if (temp_hor.size() >= stones_in_line) {
+                    board_copy.push_back(temp_hor);
                 }
             }
         }
@@ -181,6 +176,7 @@ int Game::isNoDeletedLines()
     }
     return counter;
 }
+
 
 void Game::ReadBoard(int size)
 {
@@ -256,6 +252,8 @@ void Game::ReadBoard(int size)
     if (e == EOF) {
         exit(0);
     }
+
+    AllMoves();
 }
 
 void Game::SetPlayers(Player& first, Player& second)
@@ -280,7 +278,7 @@ int Game::GetSize()
 }
 
 
-void Game::Transfer(int x, int y, vector<Point>& line)
+bool Game::Transfer(int x, int y, vector<Point>& line, bool is_just_checking)
 {
     int rangeX = 0, rangeY = 0;
     if (direction == Right) {
@@ -313,15 +311,16 @@ void Game::Transfer(int x, int y, vector<Point>& line)
             game_state = "bad_move";
             is_turn_committed = false;
             cout << "BAD_MOVE_ROW_IS_FULL" << endl;
-            return;
+            return 0;
         }
         line.push_back(Point(x_temp, y_temp));
     }
-    while (x_temp != x) {
+    while (x_temp != x && !is_just_checking) {
         board[y_temp][x_temp] = board[y_temp - rangeY][x_temp - rangeX];
         x_temp -= rangeX;
         y_temp -= rangeY;
     }
+    return 1;
 }
 
 bool Game::IsLine(vector<Point>& line)
@@ -406,7 +405,7 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
     line.push_back(Point(x, y));
     game_state = "in_progress";
     if (board[y][x] != CellState::Empty) {
-        Transfer(x, y, line);
+        Transfer(x, y, line, 0);
     }
     size_t found = game_state.find("bad_move");
     if (is_white_turn && found == std::string::npos) {
@@ -477,7 +476,6 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             SortVector(line_horizontal);
             SortVector(line_left);
             SortVector(line_right);
-            //checkSameElements(line_left, line_right);
             if (IsLine(line_left)) {
                 lines_to_delete.push_back(line_left);
             }
@@ -502,11 +500,11 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             }
             board[i.GetY()][i.GetX()] = CellState::Empty;
         }
-        if (is_white_turn) {
-            BlackPlayer.StonesIncrease(black_counter);
+        if (white_counter > black_counter) {
+            WhitePlayer.StonesIncrease(white_counter);
         }
         else {
-            WhitePlayer.StonesIncrease(white_counter);
+            BlackPlayer.StonesIncrease(black_counter);
         }
     }
     else if (lines_to_delete.size() != 0 && to_delete.size() == 0) {
@@ -521,11 +519,11 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
                 }
                 board[j.GetY()][j.GetX()] = CellState::Empty;
             }
-            if (is_white_turn) {
-                BlackPlayer.StonesIncrease(black_counter);
+            if (white_counter > black_counter) {
+                WhitePlayer.StonesIncrease(white_counter);
             }
             else {
-                WhitePlayer.StonesIncrease(white_counter);
+                BlackPlayer.StonesIncrease(black_counter);
             }
         }
     }
@@ -547,11 +545,11 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
                 }
             }
         }
-        if (is_white_turn) {
-            BlackPlayer.StonesIncrease(black_counter);
+        if (white_counter > black_counter) {
+            WhitePlayer.StonesIncrease(white_counter);
         }
         else {
-            WhitePlayer.StonesIncrease(white_counter);
+            BlackPlayer.StonesIncrease(black_counter);
         }
     }
 }
@@ -789,5 +787,102 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
     else if (index_y == max && index_x > size) {
         coordinates.push_back(string(1, from[0]-1) + to_string(index_y));
         coordinates.push_back(string(1, from[0]) + to_string(index_y-1));
+    }
+}
+
+
+void Game::AllMoves()
+{
+    vector<string> coordinates_from;
+    vector<string> coordinates_to;
+    int max_point = size * 2;
+    while (max_point != -1) {
+        int max;
+        if (max_point <= size) {
+            max = max_point + size + 1;
+        }
+        else {
+            int max_from_size = max_point - size;
+            max = size + size + 1 - max_from_size;
+        }
+        vector<string> moves_max;
+        vector<string> moves_min;
+        string coo_max = (char)('a' + max_point) + to_string(max);
+        string coo_min = (char)('a' + max_point) + to_string(1);
+        GenerateMoves(moves_max, coo_max);
+        for (string i : moves_max) {
+            DirectionDetect(coo_max, i);
+            int x_to, y_to;
+            ConvertCoordinate(i, x_to, y_to);
+            vector<Point> line;
+            if (!Transfer(x_to, y_to, line, 1)) {
+                continue;
+            }
+            else {
+                coordinates_to.push_back(i);
+            }
+        }
+        GenerateMoves(moves_min, coo_min);
+        for (string i : moves_min) {
+            DirectionDetect(coo_min, i);
+            int x_to, y_to;
+            ConvertCoordinate(i, x_to, y_to);
+            vector<Point> line;
+            if (!Transfer(x_to, y_to, line, 1)) {
+                continue;
+            }
+            else {
+                coordinates_to.push_back(i);
+            }
+        }
+        if (max_point == size * 2 || max_point == 0) {
+            vector<string> avarage;
+            int temp = max-1;
+            while (temp != 1) {
+                string coo = (char)('a' + max_point) + to_string(temp);
+                GenerateMoves(avarage, coo);
+                for (string i : avarage) {
+                    DirectionDetect(coo, i);
+                    int x_to, y_to;
+                    ConvertCoordinate(i, x_to, y_to);
+                    vector<Point> line;
+                    if (!Transfer(x_to, y_to, line, 1)) {
+                        continue;
+                    }
+                    else {
+                        coordinates_to.push_back(i);
+                    }
+                }
+                temp--;
+            }
+        }
+        max_point--;
+    }
+    int i = 0;
+    while (i < coordinates_to.size()) {
+        int j = i + 1;
+        int counter = 0;
+        while (j < coordinates_to.size()) {
+            if (coordinates_to[i] == coordinates_to[j]) {
+                counter++;
+                int x_temp, y_temp;
+                ConvertCoordinate(coordinates_to[j], x_temp, y_temp);
+                if (board[y_temp][x_temp] == CellState::Empty || counter >=3) {
+                    coordinates_to.erase(coordinates_to.begin() + j);
+                }
+                else {
+                    j++;
+                }
+            }
+            else {
+                j++;
+            }
+        }
+        i++;
+    }
+
+    cout << coordinates_to.size() << endl;
+    for (string i : coordinates_to) {
+        cout << i << endl;
     }
 }
