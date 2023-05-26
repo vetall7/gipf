@@ -18,13 +18,13 @@ void read_command(string &command, Game& game){
         game.SetPlayers(white, black);
         game.SetSize(size);
         game.SetStoneLine(length);
-        game.ReadBoard(game.GetSize());
         if (first_player == 'W') {
             game.SetTurn(true);
         }
         else {
             game.SetTurn(false);
         }
+        game.ReadBoard(game.GetSize());
     }
     else if (command == "PRINT_GAME_BOARD") {
         game.DrawWorld();
@@ -63,6 +63,9 @@ void read_command(string &command, Game& game){
     }
     else if (command == "PRINT_GAME_STATE") {
         game.PrintState();
+    }
+    else if (command == "GEN_ALL_POS_MOV") {
+        game.AllMoves();
     }
     else {
         cout << "NO COMMAND" << endl;

@@ -252,8 +252,6 @@ void Game::ReadBoard(int size)
     if (e == EOF) {
         exit(0);
     }
-
-    AllMoves();
 }
 
 void Game::SetPlayers(Player& first, Player& second)
@@ -278,7 +276,7 @@ int Game::GetSize()
 }
 
 
-bool Game::Transfer(int x, int y, vector<Point>& line, bool is_just_checking)
+void Game::Transfer(int x, int y, vector<Point>& line, bool is_just_checking)
 {
     int rangeX = 0, rangeY = 0;
     if (direction == Right) {
@@ -310,18 +308,18 @@ bool Game::Transfer(int x, int y, vector<Point>& line, bool is_just_checking)
         if (y_temp < 0 || y_temp >= board.size() || x_temp < 0 || x_temp >= board[y_temp].size() || board[y_temp][x_temp] == CellState::Space) {
             game_state = "bad_move";
             is_turn_committed = false;
-            cout << "BAD_MOVE_ROW_IS_FULL" << endl;
-            return 0;
+            if (!is_just_checking) cout << "BAD_MOVE_ROW_IS_FULL" << endl;
+            return;
         }
         line.push_back(Point(x_temp, y_temp));
     }
-    while (x_temp != x && !is_just_checking) {
+    while (x_temp != x) {
         board[y_temp][x_temp] = board[y_temp - rangeY][x_temp - rangeX];
         x_temp -= rangeX;
         y_temp -= rangeY;
     }
-    return 1;
 }
+
 
 bool Game::IsLine(vector<Point>& line)
 {
@@ -399,24 +397,97 @@ void Game::CheckHorizontalLine(vector<Point>& horizontal_line, Point& i)
 }
 
 
-void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
+void Game::DeleteStones(vector<vector<Point>>& to_delete, vector<vector<Point>>& lines_to_delete)
+{
+    if (lines_to_delete.size() == 1) {
+        int white_counter = 0, black_counter = 0;
+        for (Point i : lines_to_delete[0]) {
+            if (board[i.GetY()][i.GetX()] == CellState::White) {
+                white_counter++;
+            }
+            else {
+                black_counter++;
+            }
+            board[i.GetY()][i.GetX()] = CellState::Empty;
+        }
+        if (white_counter > black_counter) {
+            WhitePlayer.StonesIncrease(white_counter);
+        }
+        else {
+            BlackPlayer.StonesIncrease(black_counter);
+        }
+    }
+    else if (lines_to_delete.size() != 0 && to_delete.size() == 0) {
+        for (vector<Point> i : lines_to_delete) {
+            int white_counter = 0, black_counter = 0;
+            for (Point j : i) {
+                if (board[j.GetY()][j.GetX()] == CellState::White) {
+                    white_counter++;
+                }
+                else {
+                    black_counter++;
+                }
+                board[j.GetY()][j.GetX()] = CellState::Empty;
+            }
+            if (white_counter > black_counter) {
+                WhitePlayer.StonesIncrease(white_counter);
+            }
+            else {
+                BlackPlayer.StonesIncrease(black_counter);
+            }
+        }
+    }
+    else if (lines_to_delete.size() != 0) {
+        int white_counter = 0, black_counter = 0;
+        for (vector<Point> i : lines_to_delete) {
+            for (vector<Point> k : to_delete) {
+                if (checkSameElements(i, k)) {
+                    for (Point j : k) {
+                        if (board[j.GetY()][j.GetX()] == CellState::White) {
+                            white_counter++;
+                        }
+                        else {
+                            black_counter++;
+                        }
+                        board[j.GetY()][j.GetX()] = CellState::Empty;
+                    }
+                    break;
+                }
+            }
+        }
+        if (white_counter > black_counter) {
+            WhitePlayer.StonesIncrease(white_counter);
+        }
+        else {
+            BlackPlayer.StonesIncrease(black_counter);
+        }
+    }
+}
+
+
+void Game::Move(int x, int y, vector<vector<Point>>& to_delete, bool is_test_move)
 {
     vector <Point> line;
     line.push_back(Point(x, y));
     game_state = "in_progress";
     if (board[y][x] != CellState::Empty) {
-        Transfer(x, y, line, 0);
+        if (!is_test_move) Transfer(x, y, line, 0);
+        else Transfer(x, y, line, 1);
     }
     size_t found = game_state.find("bad_move");
     if (is_white_turn && found == std::string::npos) {
         board[y][x] = CellState::White;
-        is_white_turn = false;
-        WhitePlayer.StonesDecrease(1);
+        if (!is_test_move) {
+            is_white_turn = false;
+            WhitePlayer.StonesDecrease(1);
+        }
     }
     else if (found == std::string::npos) {
         board[y][x] = CellState::Black;
-        is_white_turn = true;
-        BlackPlayer.StonesDecrease(1);
+        if (!is_test_move) {
+            is_white_turn = true;
+            BlackPlayer.StonesDecrease(1);
+        }
     }
     vector<vector<Point>> lines_to_delete;
     bool is_checked = false;
@@ -488,70 +559,7 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete)
             }
         }
     }
-    
-    if (lines_to_delete.size() == 1) {
-        int white_counter = 0, black_counter = 0;
-        for (Point i : lines_to_delete[0]) {
-            if (board[i.GetY()][i.GetX()] == CellState::White) {
-                white_counter++;
-            }
-            else {
-                black_counter++;
-            }
-            board[i.GetY()][i.GetX()] = CellState::Empty;
-        }
-        if (white_counter > black_counter) {
-            WhitePlayer.StonesIncrease(white_counter);
-        }
-        else {
-            BlackPlayer.StonesIncrease(black_counter);
-        }
-    }
-    else if (lines_to_delete.size() != 0 && to_delete.size() == 0) {
-        for (vector<Point> i : lines_to_delete) {
-            int white_counter = 0, black_counter = 0;
-            for (Point j : i) {
-                if (board[j.GetY()][j.GetX()] == CellState::White) {
-                    white_counter++;
-                }
-                else {
-                    black_counter++;
-                }
-                board[j.GetY()][j.GetX()] = CellState::Empty;
-            }
-            if (white_counter > black_counter) {
-                WhitePlayer.StonesIncrease(white_counter);
-            }
-            else {
-                BlackPlayer.StonesIncrease(black_counter);
-            }
-        }
-    }
-    else if (lines_to_delete.size() != 0){
-        int white_counter = 0, black_counter = 0;
-        for (vector<Point> i : lines_to_delete) {
-            for (vector<Point> k : to_delete) {
-                if (checkSameElements(i, k)) {
-                    for (Point j : k) {
-                        if (board[j.GetY()][j.GetX()] == CellState::White) {
-                            white_counter++;
-                        }
-                        else {
-                            black_counter++;
-                        }
-                        board[j.GetY()][j.GetX()] = CellState::Empty;
-                    }
-                    break;
-                }
-            }
-        }
-        if (white_counter > black_counter) {
-            WhitePlayer.StonesIncrease(white_counter);
-        }
-        else {
-            BlackPlayer.StonesIncrease(black_counter);
-        }
-    }
+    DeleteStones(to_delete, lines_to_delete);
 }
 
 
@@ -676,7 +684,7 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
         int x_to, y_to;
         ConvertCoordinate(to, x_to, y_to);
         DirectionDetect(from, to);
-        Move(x_to, y_to, to_delete);
+        Move(x_to, y_to, to_delete, 0);
         x = x_to, y = y_to;
         if (is_turn_committed) {
             cout << "MOVE_COMMITTED" << endl;
@@ -795,6 +803,8 @@ void Game::AllMoves()
 {
     vector<string> coordinates_from;
     vector<string> coordinates_to;
+    vector<vector<vector<CellState>>> all_boards;
+    string state_copy = game_state;
     int max_point = size * 2;
     while (max_point != -1) {
         int max;
@@ -815,25 +825,40 @@ void Game::AllMoves()
             int x_to, y_to;
             ConvertCoordinate(i, x_to, y_to);
             vector<Point> line;
-            if (!Transfer(x_to, y_to, line, 1)) {
-                continue;
+            vector<vector<Point>> to;
+            vector<vector<CellState>> board_copy = board;
+            Move(x_to, y_to, to, 1);
+            bool is_add = true;
+            for (vector<vector<CellState>> i : all_boards) {
+                if (i == board) {
+                    is_add = false;
+                }
             }
-            else {
-                coordinates_to.push_back(i);
+            size_t found = game_state.find("bad_move");
+            if (is_add && found == std::string::npos) {
+                all_boards.push_back(board);
             }
+            board = board_copy;
         }
         GenerateMoves(moves_min, coo_min);
         for (string i : moves_min) {
             DirectionDetect(coo_min, i);
             int x_to, y_to;
             ConvertCoordinate(i, x_to, y_to);
-            vector<Point> line;
-            if (!Transfer(x_to, y_to, line, 1)) {
-                continue;
+            vector<vector<Point>> to;
+            vector<vector<CellState>> board_copy = board;
+            Move(x_to, y_to, to, 1);
+            bool is_add = true;
+            for (vector<vector<CellState>> i : all_boards) {
+                if (i == board) {
+                    is_add = false;
+                }
             }
-            else {
-                coordinates_to.push_back(i);
+            size_t found = game_state.find("bad_move");
+            if (is_add && found == std::string::npos) {
+                all_boards.push_back(board);
             }
+            board = board_copy;
         }
         if (max_point == size * 2 || max_point == 0) {
             vector<string> avarage;
@@ -845,44 +870,26 @@ void Game::AllMoves()
                     DirectionDetect(coo, i);
                     int x_to, y_to;
                     ConvertCoordinate(i, x_to, y_to);
-                    vector<Point> line;
-                    if (!Transfer(x_to, y_to, line, 1)) {
-                        continue;
+                    vector<vector<Point>> to;
+                    vector<vector<CellState>> board_copy = board;
+                    Move(x_to, y_to, to, 1);
+                    bool is_add = true;
+                    for (vector<vector<CellState>> i : all_boards) {
+                        if (i == board) {
+                            is_add = false;
+                        }
                     }
-                    else {
-                        coordinates_to.push_back(i);
+                    size_t found = game_state.find("bad_move");
+                    if (is_add && found == std::string::npos) {
+                        all_boards.push_back(board);
                     }
+                    board = board_copy;
                 }
                 temp--;
             }
         }
         max_point--;
     }
-    int i = 0;
-    while (i < coordinates_to.size()) {
-        int j = i + 1;
-        int counter = 0;
-        while (j < coordinates_to.size()) {
-            if (coordinates_to[i] == coordinates_to[j]) {
-                counter++;
-                int x_temp, y_temp;
-                ConvertCoordinate(coordinates_to[j], x_temp, y_temp);
-                if (board[y_temp][x_temp] == CellState::Empty || counter >=3) {
-                    coordinates_to.erase(coordinates_to.begin() + j);
-                }
-                else {
-                    j++;
-                }
-            }
-            else {
-                j++;
-            }
-        }
-        i++;
-    }
-
-    cout << coordinates_to.size() << endl;
-    for (string i : coordinates_to) {
-        cout << i << endl;
-    }
+    game_state = state_copy;
+    cout << all_boards.size() << endl;
 }

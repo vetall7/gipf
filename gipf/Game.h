@@ -70,9 +70,9 @@ private:
     int stones_in_line;
     void ConvertCoordinate(string coo, int& x, int& y);
     void GenerateMoves(vector<string>& coordinates, string& from);
-    void Move(int x, int y, vector<vector<Point>>& to_delete);
+    void Move(int x, int y, vector<vector<Point>>& to_delete, bool is_test_move);
     void DirectionDetect(string from, string to);
-    bool Transfer(int x, int y, vector<Point>& line, bool is_just_checking);
+    void Transfer(int x, int y, vector<Point>& line, bool is_just_checking);
     bool IsLine(vector<Point>& line);
     void CheckLeftLine(vector<Point>& left_line, Point& i);
     void CheckRightLine(vector<Point>& right_line, Point& i);
@@ -81,7 +81,7 @@ private:
     bool IsGoodCoordinate(string coo, bool is_start);
     bool IsGoodField(string coo, bool is_start);
     int isNoDeletedLines();
-    void AllMoves();
+    void DeleteStones(vector<vector<Point>>& to_delete, vector<vector<Point>>& lines_to_delete);
     Direction direction;
 public:
     Game();
@@ -93,6 +93,7 @@ public:
     void SetSize(int size);
     void SetStoneLine(int stones);
     int GetSize();
+    void AllMoves();
     void DoMove(string from, string to, vector<string>& delete_points);
     void SetTurn(bool turn);
     void PrintState();
