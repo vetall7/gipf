@@ -65,7 +65,7 @@ void read_command(string &command, Game& game){
         game.PrintState();
     }
     else if (command == "GEN_ALL_POS_MOV") {
-        game.AllMoves(1);
+        cout << game.AllMoves().size();
     }
     else {
         cout << "NO COMMAND" << endl;

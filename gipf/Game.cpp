@@ -635,7 +635,7 @@ bool Game::IsGoodCoordinate(string coo, bool is_start)
 
 void Game::DoMove(string from, string to, vector<string>& delete_points)
 {
-    if (AllMoves(0) == 0) {
+    if (AllMoves().size() == 0) {
         game_state = "dead_lock";
         return;
     }
@@ -803,7 +803,7 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 }
 
 
-int Game::AllMoves(bool is_print)
+vector<vector<vector<CellState>>> Game::AllMoves()
 {
     vector<string> coordinates_from;
     vector<string> coordinates_to;
@@ -833,13 +833,13 @@ int Game::AllMoves(bool is_print)
             vector<vector<Point>> to;
             vector<vector<CellState>> board_copy = board;
             Move(x_to, y_to, to, 1);
-            if (is_white_turn && game_state == "white_win") {
-                string add = coo_max + "-" + i;
-                winning_moves.push_back(add);
+            if (is_white_turn) {
+                if (BlackPlayer.GetReserveStones() == 1) {
+                    is_white_turn = false;
+                    AllMoves();
+                }
             }
-            else if (!is_white_turn && game_state == "black_win") {
-                string add = coo_max + "-" + i;
-                winning_moves.push_back(add);
+            else if (!is_white_turn) {
             }
             bool is_add = true;
             for (vector<vector<CellState>> i : all_boards) {
@@ -920,9 +920,8 @@ int Game::AllMoves(bool is_print)
         max_point--;
     }
     game_state = state_copy;
-    if (is_print) cout << all_boards.size() << endl;
     for (string i : winning_moves) {
         cout << i << endl;
     }
-    return all_boards.size();
+    return move(all_boards);
 }

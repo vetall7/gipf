@@ -93,7 +93,7 @@ public:
     void SetSize(int size);
     void SetStoneLine(int stones);
     int GetSize();
-    int AllMoves(bool is_print);
+    vector<vector<vector<CellState>>> AllMoves();
     void DoMove(string from, string to, vector<string>& delete_points);
     void SetTurn(bool turn);
     void PrintState();
