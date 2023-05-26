@@ -635,6 +635,10 @@ bool Game::IsGoodCoordinate(string coo, bool is_start)
 
 void Game::DoMove(string from, string to, vector<string>& delete_points)
 {
+    if (AllMoves(0) == 0) {
+        game_state = "dead_lock";
+        return;
+    }
     is_turn_committed = false;
     vector<vector<Point>> to_delete;
     int x, y;
@@ -799,11 +803,12 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 }
 
 
-void Game::AllMoves()
+int Game::AllMoves(bool is_print)
 {
     vector<string> coordinates_from;
     vector<string> coordinates_to;
     vector<vector<vector<CellState>>> all_boards;
+    vector<string> winning_moves;
     string state_copy = game_state;
     int max_point = size * 2;
     while (max_point != -1) {
@@ -828,6 +833,14 @@ void Game::AllMoves()
             vector<vector<Point>> to;
             vector<vector<CellState>> board_copy = board;
             Move(x_to, y_to, to, 1);
+            if (is_white_turn && game_state == "white_win") {
+                string add = coo_max + "-" + i;
+                winning_moves.push_back(add);
+            }
+            else if (!is_white_turn && game_state == "black_win") {
+                string add = coo_max + "-" + i;
+                winning_moves.push_back(add);
+            }
             bool is_add = true;
             for (vector<vector<CellState>> i : all_boards) {
                 if (i == board) {
@@ -856,6 +869,14 @@ void Game::AllMoves()
             }
             size_t found = game_state.find("bad_move");
             if (is_add && found == std::string::npos) {
+                if (is_white_turn && game_state == "white_win") {
+                    string add = coo_min + "-" + i;
+                    winning_moves.push_back(add);
+                }
+                else if (!is_white_turn && game_state == "black_win") {
+                    string add = coo_min + "-" + i;
+                    winning_moves.push_back(add);
+                }
                 all_boards.push_back(board);
             }
             board = board_copy;
@@ -882,6 +903,14 @@ void Game::AllMoves()
                     size_t found = game_state.find("bad_move");
                     if (is_add && found == std::string::npos) {
                         all_boards.push_back(board);
+                        if (is_white_turn && game_state == "white_win") {
+                            string add = coo + "-" + i;
+                            winning_moves.push_back(add);
+                        }
+                        else if (!is_white_turn && game_state == "black_win") {
+                            string add = coo + "-" + i;
+                            winning_moves.push_back(add);
+                        }
                     }
                     board = board_copy;
                 }
@@ -891,5 +920,9 @@ void Game::AllMoves()
         max_point--;
     }
     game_state = state_copy;
-    cout << all_boards.size() << endl;
+    if (is_print) cout << all_boards.size() << endl;
+    for (string i : winning_moves) {
+        cout << i << endl;
+    }
+    return all_boards.size();
 }
