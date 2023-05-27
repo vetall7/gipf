@@ -218,16 +218,25 @@ void Game::ReadBoard(int size)
             break;
         }
     }
-    int count = isNoDeletedLines();
-    if (count != 0){
+    if (!BoardCheck()) {
+        cout << "WRONG_BOARD_ROW_LENGTH" << endl;
+        board.clear();
+        return;
+    }
+    else if (1) {
+        int count = isNoDeletedLines();
         if (count == 1) {
             cout << "ERROR_FOUND_" << count << "_ROW_OF_LENGTH_K" << endl;
+            board.clear();
+            return;
         }
-        else {
+        else if (count != 0) {
             cout << "ERROR_FOUND_" << count << "_ROWS_OF_LENGTH_K" << endl;
+            board.clear();
+            return;
         }
     }
-    else if (white_counter + WhitePlayer.GetReserveStones() != WhitePlayer.GetStones()) {
+    if (white_counter + WhitePlayer.GetReserveStones() > WhitePlayer.GetStones()) {
         cout << "WRONG_WHITE_PAWNS_NUMBER" << endl;
         for (auto& innerVector : board) {
             innerVector.clear();
@@ -235,16 +244,13 @@ void Game::ReadBoard(int size)
         board.clear();
         board.resize(0);
     }
-    else if (black_counter + BlackPlayer.GetReserveStones() != BlackPlayer.GetStones()) {
+    else if (black_counter + BlackPlayer.GetReserveStones() > BlackPlayer.GetStones()) {
         cout << "WRONG_BLACK_PAWNS_NUMBER" << endl;
         for (auto& innerVector : board) {
             innerVector.clear();
         }
         board.clear();
         board.resize(0);
-    }
-    else if (!BoardCheck()) {
-        cout << "WRONG_BOARD_ROW_LENGTH" << endl;
     }
     else {
         cout << "BOARD_STATE_OK" << endl;
@@ -805,6 +811,7 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 
 vector<vector<vector<CellState>>> Game::AllMoves()
 {
+    bool static is_check_next_move = true;
     vector<string> coordinates_from;
     vector<string> coordinates_to;
     vector<vector<vector<CellState>>> all_boards;
@@ -833,13 +840,21 @@ vector<vector<vector<CellState>>> Game::AllMoves()
             vector<vector<Point>> to;
             vector<vector<CellState>> board_copy = board;
             Move(x_to, y_to, to, 1);
-            if (is_white_turn) {
+            if (is_white_turn && is_check_next_move) {
                 if (BlackPlayer.GetReserveStones() == 1) {
                     is_white_turn = false;
-                    AllMoves();
+                    is_check_next_move = false;
+                    vector<vector<vector<CellState>>> board_for_move = AllMoves();
+                    
                 }
             }
-            else if (!is_white_turn) {
+            else if (!is_white_turn && is_check_next_move) {
+                if (WhitePlayer.GetReserveStones() == 1) {
+                    is_check_next_move = false;
+                    is_white_turn = true;
+                    vector<vector<vector<CellState>>> board_for_move = AllMoves();
+
+                }
             }
             bool is_add = true;
             for (vector<vector<CellState>> i : all_boards) {
