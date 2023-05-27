@@ -2,10 +2,11 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <algorithm>
 #include "Game.h"
 using namespace std;
 
-void read_command(string &command, Game& game){
+void read_command(string& command, Game& game) {
     if (command == "LOAD_GAME_BOARD") {
         int size, length, white_stones, black_stones;
         cin >> size >> length >> white_stones >> black_stones;
@@ -18,13 +19,13 @@ void read_command(string &command, Game& game){
         game.SetPlayers(white, black);
         game.SetSize(size);
         game.SetStoneLine(length);
-        game.ReadBoard(game.GetSize());
         if (first_player == 'W') {
             game.SetTurn(true);
         }
         else {
             game.SetTurn(false);
         }
+        game.ReadBoard(game.GetSize());
     }
     else if (command == "PRINT_GAME_BOARD") {
         game.DrawWorld();
@@ -33,7 +34,7 @@ void read_command(string &command, Game& game){
         string from, to, line;
         char temp = getchar();
         temp = getchar();
-        while (temp != ' ' && temp != '\n'){
+        while (temp != ' ' && temp != '\n') {
             line += temp;
             temp = getchar();
         }
@@ -48,21 +49,34 @@ void read_command(string &command, Game& game){
         }
         std::vector<std::string> words;
         std::string currentWord;
+        int counter = 0;
+        input.erase(std::remove_if(input.begin(), input.end(), ::isspace), input.end());
+        int i = 0;
         for (char c : input) {
-            if (c == ' ') {
+            if (counter == 2) {
+                counter = 0;
                 if (!currentWord.empty()) {
                     words.push_back(currentWord);
                     currentWord.clear();
                 }
             }
-            else {
-                currentWord += c;
+            counter++;
+            currentWord += c;
+            i++;
+            if (i == input.size()) {
+                if (!currentWord.empty()) {
+                    words.push_back(currentWord);
+                    currentWord.clear();
+                }
             }
         }
         game.DoMove(from, to, words);
     }
     else if (command == "PRINT_GAME_STATE") {
         game.PrintState();
+    }
+    else if (command == "GEN_ALL_POS_MOV") {
+        cout << game.AllMoves().size();
     }
     else {
         cout << "NO COMMAND" << endl;
