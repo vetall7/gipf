@@ -79,10 +79,10 @@ void read_command(string& command, Game& game) {
         cout << game.AllMoves().size() << endl;
     }
     else if (command == "GEN_ALL_POS_MOV_EXT") {
-        game.WinMove(0,0);
+        game.WinMove(0, 0);
     }
     else if (command == "GEN_ALL_POS_MOV_NUM") {
-        game.WinMove(1,0);
+        game.WinMove(1, 0);
     }
     else if (command == "GEN_ALL_POS_MOV_EXT_NUM") {
         game.WinMove(1, 1);

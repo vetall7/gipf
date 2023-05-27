@@ -85,7 +85,8 @@ private:
     int isNoDeletedLines();
     Direction direction;
 public:
-    bool AllMoves();
+    vector<string> AllMoves();
+    void WinMove(bool is_print_all, bool is_print1);
     Game();
     Game(int size, Player& first, Player& second);
     void SetCell(int x, int y, CellState cell);

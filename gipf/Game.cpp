@@ -553,7 +553,7 @@ void Game::DeleteStones(vector<vector<Point>>& to_delete, vector<vector<Point>>&
             if (y_diff < 0) y_diff *= -1;
             if (x_diff / 2 >= stones_in_line - 1 || y_diff >= stones_in_line - 1) {
                 for (vector<Point> i : lines_to_delete) {
-                    auto is_from = std::find(i.begin() , i.end(), k[0]);
+                    auto is_from = std::find(i.begin(), i.end(), k[0]);
                     auto is_to = std::find(i.begin(), i.end(), k[1]);
                     if (is_from != i.end() && is_to != i.end()) {
                         for (Point j : i) {
@@ -726,7 +726,7 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
             else if (!is_good_color) {
                 cout << "WRONG_COLOR_OF_CHOSEN_ROW" << endl;
             }
-            else{
+            else {
                 cout << "MOVE_COMMITTED" << endl;
             }
         }
@@ -844,11 +844,72 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
     }
 }
 
+void Game::WinMove(bool is_print_all, bool is_print1) {
+    if (BlackPlayer.GetReserveStones() != 1) {
+        return;
+    }
+    vector<string> coordinates = AllMoves();
+    vector<string> win_moves;
+    bool turn = is_white_turn;
+    for (string i : coordinates) {
+        string from, to;
+        from = i.substr(0, 2);
+        to = i.substr(3, 4);
+        DirectionDetect(from, to);
+        int x_to, y_to;
+        ConvertCoordinate(to, x_to, y_to);
+        vector<vector<Point>> to2;
+        vector<vector<CellState>> board_copy = board;
+        Move(x_to, y_to, to2, 1);
+        if (is_white_turn) is_white_turn = false;
+        else is_white_turn = true;
+        vector<string> second_turn = AllMoves();
+        bool is = true;
+        for (string j : second_turn) {
+            int white_res = WhitePlayer.GetReserveStones(), black_res = BlackPlayer.GetReserveStones();
+            string from1, to1;
+            from1 = j.substr(0, 2);
+            to1 = j.substr(3, 4);
+            DirectionDetect(from1, to1);
+            int x_to, y_to;
+            ConvertCoordinate(to1, x_to, y_to);
+            vector<vector<CellState>> board_copy2 = board;
+            Move(x_to, y_to, to2, 1);
+            if (BlackPlayer.GetReserveStones() != 0) {
+                is = false;
+                break;
+            }
+            board = board_copy2;
+            WhitePlayer.SetReserveStones(white_res);
+            BlackPlayer.SetReserveStones(black_res);
+        }
+        if (is_white_turn) is_white_turn = false;
+        else is_white_turn = true;
+        if (is) {
+            string move = from + "-" + to;
+            win_moves.push_back(move);
+        }
+        board = board_copy;
+    }
+    is_white_turn = turn;
+    if (is_print1 && win_moves.size() != 0) {
+        cout << "1" << endl;
+    }
+    else if (is_print_all) {
+        cout << win_moves.size() << endl;
+    }
+    else if (win_moves.size() != 0) {
+        cout << win_moves[0] << endl;
+    }
+    else {
+        cout << coordinates.size() << endl;
+    }
+}
 
-bool  Game::AllMoves()
+vector<string> Game::AllMoves()
 {
     bool static is_check_next_move = true;
-    vector<string> coordinates_from;
+    vector<string> coordinates;
     vector<string> coordinates_to;
     vector<vector<vector<CellState>>> all_boards;
     vector<string> winning_moves;
@@ -877,27 +938,6 @@ bool  Game::AllMoves()
             vector<vector<Point>> to;
             vector<vector<CellState>> board_copy = board;
             Move(x_to, y_to, to, 1);
-            if (!is_check_next_move) {
-                if (BlackPlayer.GetReserveStones() == 0 || WhitePlayer.GetReserveStones() == 0) {
-
-                }
-            }
-            if (is_white_turn && is_check_next_move) {
-                if (BlackPlayer.GetReserveStones() == 1) {
-                    is_white_turn = false;
-                    is_check_next_move = false;
-                    vector<vector<vector<CellState>>> board_for_move = AllMoves();
-                    
-                }
-            }
-            else if (!is_white_turn && is_check_next_move) {
-                if (WhitePlayer.GetReserveStones() == 1) {
-                    is_check_next_move = false;
-                    is_white_turn = true;
-                    vector<vector<vector<CellState>>> board_for_move = AllMoves();
-
-                }
-            }
             bool is_add = true;
             for (vector<vector<CellState>> i : all_boards) {
                 if (i == board) {
@@ -906,6 +946,8 @@ bool  Game::AllMoves()
             }
             size_t found = game_state.find("bad_move");
             if (is_add && found == std::string::npos) {
+                string coo = coo_max + "-" + i;
+                coordinates.push_back(coo);
                 all_boards.push_back(board);
             }
             board = board_copy;
@@ -929,14 +971,8 @@ bool  Game::AllMoves()
             }
             size_t found = game_state.find("bad_move");
             if (is_add && found == std::string::npos) {
-                if (is_white_turn && game_state == "white_win") {
-                    string add = coo_min + "-" + i;
-                    winning_moves.push_back(add);
-                }
-                else if (!is_white_turn && game_state == "black_win") {
-                    string add = coo_min + "-" + i;
-                    winning_moves.push_back(add);
-                }
+                string temp = coo_min + "-" + i;
+                coordinates.push_back(temp);
                 all_boards.push_back(board);
             }
             board = board_copy;
@@ -965,15 +1001,9 @@ bool  Game::AllMoves()
                     }
                     size_t found = game_state.find("bad_move");
                     if (is_add && found == std::string::npos) {
+                        string temp = coo + "-" + i;
+                        coordinates.push_back(temp);
                         all_boards.push_back(board);
-                        if (is_white_turn && game_state == "white_win") {
-                            string add = coo + "-" + i;
-                            winning_moves.push_back(add);
-                        }
-                        else if (!is_white_turn && game_state == "black_win") {
-                            string add = coo + "-" + i;
-                            winning_moves.push_back(add);
-                        }
                     }
                     board = board_copy;
                     WhitePlayer.SetReserveStones(white_res);
@@ -985,8 +1015,5 @@ bool  Game::AllMoves()
         max_point--;
     }
     game_state = state_copy;
-    for (string i : winning_moves) {
-        cout << i << endl;
-    }
-    return false;
+    return move(coordinates);
 }
