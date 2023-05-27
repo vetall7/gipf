@@ -845,7 +845,7 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 }
 
 
-vector<vector<vector<CellState>>> Game::AllMoves()
+bool  Game::AllMoves()
 {
     bool static is_check_next_move = true;
     vector<string> coordinates_from;
@@ -877,9 +877,11 @@ vector<vector<vector<CellState>>> Game::AllMoves()
             vector<vector<Point>> to;
             vector<vector<CellState>> board_copy = board;
             Move(x_to, y_to, to, 1);
-            //if (!is_check_next_move) {
-              //  if ()
-            //}
+            if (!is_check_next_move) {
+                if (BlackPlayer.GetReserveStones() == 0 || WhitePlayer.GetReserveStones() == 0) {
+
+                }
+            }
             if (is_white_turn && is_check_next_move) {
                 if (BlackPlayer.GetReserveStones() == 1) {
                     is_white_turn = false;
@@ -986,5 +988,5 @@ vector<vector<vector<CellState>>> Game::AllMoves()
     for (string i : winning_moves) {
         cout << i << endl;
     }
-    return move(all_boards);
+    return false;
 }
