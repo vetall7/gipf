@@ -76,7 +76,16 @@ void read_command(string& command, Game& game) {
         game.PrintState();
     }
     else if (command == "GEN_ALL_POS_MOV") {
-        cout << game.AllMoves().size();
+        cout << game.AllMoves().size() << endl;
+    }
+    else if (command == "GEN_ALL_POS_MOV_EXT") {
+        game.WinMove(0,0);
+    }
+    else if (command == "GEN_ALL_POS_MOV_NUM") {
+        game.WinMove(1,0);
+    }
+    else if (command == "GEN_ALL_POS_MOV_EXT_NUM") {
+        game.WinMove(1, 1);
     }
     else {
         cout << "NO COMMAND" << endl;
