@@ -976,7 +976,7 @@ vector<string> Game::AllMoves()
                 all_boards.push_back(board);
             }
             board = board_copy;
-            WhitePlayer.SetReserveStones(white_res);
+            WhitePlayer.SetReserveStones(white_res); // 
             BlackPlayer.SetReserveStones(black_res);
         }
         if (max_point == size * 2 || max_point == 0) {
