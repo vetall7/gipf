@@ -789,7 +789,7 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 {
     int index_x = from[0] - 'a';
     int index_y = from[1] - '0';
-    int max = (size * 2 + 1) - (index_x - size); // максимальное число которое может иметь буква
+    int max = (size * 2 + 1) - (index_x - size); // ÃÂ¼ÃÂ°ÃÂºÃÂÃÂ¸ÃÂ¼ÃÂ°ÃÂ»ÃÂÃÂ½ÃÂ¾ÃÂµ ÃÂÃÂ¸ÃÂÃÂ»ÃÂ¾ ÃÂºÃÂ¾ÃÂÃÂ¾ÃÂÃÂ¾ÃÂµ ÃÂ¼ÃÂ¾ÃÂ¶ÃÂµÃÂ ÃÂ¸ÃÂ¼ÃÂµÃÂÃÂ ÃÂ±ÃÂÃÂºÃÂ²ÃÂ°
     if (index_y == 1 && index_x >= size) {
         if (index_x == size) {
             coordinates.push_back(string(1, from[0]) + "2");
@@ -976,7 +976,7 @@ vector<string> Game::AllMoves()
                 all_boards.push_back(board);
             }
             board = board_copy;
-            WhitePlayer.SetReserveStones(white_res); // 
+            WhitePlayer.SetReserveStones(white_res);
             BlackPlayer.SetReserveStones(black_res);
         }
         if (max_point == size * 2 || max_point == 0) {
