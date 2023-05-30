@@ -76,13 +76,16 @@ void read_command(string& command, Game& game) {
         game.PrintState();
     }
     else if (command == "GEN_ALL_POS_MOV") {
-        cout << game.AllMoves().size() << endl;
+        vector<string> moves = game.AllMoves();
+        for (string i : moves) {
+            cout << i << endl;
+        }
     }
     else if (command == "GEN_ALL_POS_MOV_EXT") {
         game.WinMove(0, 0);
     }
     else if (command == "GEN_ALL_POS_MOV_NUM") {
-        game.WinMove(1, 0);
+        cout << game.AllMoves().size() << "_UNIQUE_MOVES" << endl;
     }
     else if (command == "GEN_ALL_POS_MOV_EXT_NUM") {
         game.WinMove(1, 1);
