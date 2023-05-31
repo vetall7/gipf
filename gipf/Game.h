@@ -85,7 +85,7 @@ private:
     int isNoDeletedLines();
     Direction direction;
 public:
-    vector<string> AllMoves();
+    vector<string> AllMoves(bool is_print_all_boards);
     void WinMove(bool is_print_all, bool is_print1);
     Game();
     Game(int size, Player& first, Player& second);

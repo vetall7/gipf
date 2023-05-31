@@ -848,7 +848,7 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
     if (BlackPlayer.GetReserveStones() != 1) {
         return;
     }
-    vector<string> coordinates = AllMoves();
+    vector<string> coordinates = AllMoves(0);
     vector<string> win_moves;
     bool turn = is_white_turn;
     for (string i : coordinates) {
@@ -863,7 +863,7 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
         Move(x_to, y_to, to2, 1);
         if (is_white_turn) is_white_turn = false;
         else is_white_turn = true;
-        vector<string> second_turn = AllMoves();
+        vector<string> second_turn = AllMoves(0);
         bool is = true;
         for (string j : second_turn) {
             int white_res = WhitePlayer.GetReserveStones(), black_res = BlackPlayer.GetReserveStones();
@@ -906,7 +906,7 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
     }
 }
 
-vector<string> Game::AllMoves()
+vector<string> Game::AllMoves(bool is_print_all_boards)
 {
     bool static is_check_next_move = true;
     vector<string> coordinates;
@@ -949,6 +949,7 @@ vector<string> Game::AllMoves()
                 string coo = coo_max + "-" + i;
                 coordinates.push_back(coo);
                 all_boards.push_back(board);
+                if (is_print_all_boards) { DrawWorld(); }
             }
             board = board_copy;
             WhitePlayer.SetReserveStones(white_res);
@@ -974,6 +975,7 @@ vector<string> Game::AllMoves()
                 string temp = coo_min + "-" + i;
                 coordinates.push_back(temp);
                 all_boards.push_back(board);
+                if (is_print_all_boards) { DrawWorld(); }
             }
             board = board_copy;
             WhitePlayer.SetReserveStones(white_res);
@@ -1004,6 +1006,7 @@ vector<string> Game::AllMoves()
                         string temp = coo + "-" + i;
                         coordinates.push_back(temp);
                         all_boards.push_back(board);
+                        if (is_print_all_boards) { DrawWorld(); }
                     }
                     board = board_copy;
                     WhitePlayer.SetReserveStones(white_res);
