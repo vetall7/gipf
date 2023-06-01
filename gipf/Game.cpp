@@ -4,13 +4,18 @@
 
 Game::Game()
 {
-    game_state = "in_progress";
+    game_state = "GAME_IN_PROGRESS";
+}
+
+int Game::GetDeleteLines()
+{
+    return delete_lines_counter;
 }
 
 Game::Game(int size, Player& first, Player& second) : WhitePlayer(first), BlackPlayer(second)
 {
     board.resize(size);
-    game_state = "in_progress";
+    game_state = "GAME_IN_PROGRESS";
 }
 
 void Game::SetCell(int x, int y, CellState cell)
@@ -27,7 +32,7 @@ void Game::SetCell(int x, int y, CellState cell)
 void Game::DrawWorld()
 {
     if (board.size() == 0) {
-        cout << "THE BOARD IS EMPTY" << endl;
+        cout << "EMPTY_BOARD" << endl;
         return;
     }
     cout << size << " " << stones_in_line << " " << WhitePlayer.GetStones() << " " << BlackPlayer.GetStones() << endl;
@@ -179,6 +184,7 @@ int Game::isNoDeletedLines()
 
 void Game::ReadBoard(int size)
 {
+    board.clear();
     char zn;
     int i = 0, j = 0;
     zn = getchar();
@@ -405,7 +411,7 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete, bool is_test_mov
 {
     vector <Point> line;
     line.push_back(Point(x, y));
-    game_state = "in_progress";
+    game_state = "GAME_IN_PROGRESS";
     if (board[y][x] != CellState::Empty) {
         if (!is_test_move) Transfer(x, y, line, 0);
         else Transfer(x, y, line, 1);
@@ -483,7 +489,6 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete, bool is_test_mov
             SortVector(line_horizontal);
             SortVector(line_left);
             SortVector(line_right);
-            //checkSameElements(line_left, line_right);
             if (IsLine(line_left)) {
                 lines_to_delete.push_back(line_left);
             }
@@ -497,6 +502,26 @@ void Game::Move(int x, int y, vector<vector<Point>>& to_delete, bool is_test_mov
         }
     }
     DeleteStones(to_delete, lines_to_delete);
+}
+
+
+bool haveCommonElement(vector<Point>& vec1,vector<Point>& vec2) {
+    // Сначала сортируем оба вектора
+    vector<Point> sortedVec1(vec1);
+    vector<Point> sortedVec2(vec2);
+    std::sort(sortedVec1.begin(), sortedVec1.end());
+    std::sort(sortedVec2.begin(), sortedVec2.end());
+
+    // Создаем вектор для хранения общих элементов
+    vector<Point> commonElements;
+
+    // Используем std::set_intersection для поиска общих элементов
+    std::set_intersection(sortedVec1.begin(), sortedVec1.end(),
+        sortedVec2.begin(), sortedVec2.end(),
+        std::back_inserter(commonElements));
+
+    // Если вектор commonElements не пуст, значит есть общие элементы
+    return !commonElements.empty();
 }
 
 
@@ -523,6 +548,21 @@ void Game::DeleteStones(vector<vector<Point>>& to_delete, vector<vector<Point>>&
         }
     }
     else if (lines_to_delete.size() != 0 && to_delete.size() == 0) {
+        bool is = false;
+        for (vector <Point> i : lines_to_delete) {
+            for (vector<Point> j : lines_to_delete) {
+                if (i == j) {
+					continue;
+				}
+                if (haveCommonElement(i, j)) {
+					is = true;
+					break;
+				}
+			}
+		}
+        if (is && delete_lines_counter == -1) { 
+            delete_lines_counter += lines_to_delete.size();
+        }
         for (vector<Point> i : lines_to_delete) {
             int white_counter = 0, black_counter = 0;
             for (Point j : i) {
@@ -759,6 +799,28 @@ void Game::SetTurn(bool turn)
 
 void Game::PrintState()
 {
+    bool is_board_full = true;
+    int _white = 0, _black = 0;
+    for (vector<CellState> i : board) {
+        for (CellState j : i) {
+            if (j == CellState::Empty) {
+				is_board_full = false;
+                break;
+			}
+            if (j == CellState::White) {
+                _white++;
+            }
+            else if (j == CellState::Black) {
+				_black++;
+			}
+        }
+    }
+    if (is_board_full && _white > _black) {
+        game_state = "THE_WINNER_IS_WHITE";
+    }
+    else if (is_board_full) {
+		game_state = "THE_WINNER_IS_BLACK";
+	}
     cout << game_state << endl;
 }
 
@@ -789,7 +851,7 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 {
     int index_x = from[0] - 'a';
     int index_y = from[1] - '0';
-    int max = (size * 2 + 1) - (index_x - size); // ÃÂ¼ÃÂ°ÃÂºÃÂÃÂ¸ÃÂ¼ÃÂ°ÃÂ»ÃÂÃÂ½ÃÂ¾ÃÂµ ÃÂÃÂ¸ÃÂÃÂ»ÃÂ¾ ÃÂºÃÂ¾ÃÂÃÂ¾ÃÂÃÂ¾ÃÂµ ÃÂ¼ÃÂ¾ÃÂ¶ÃÂµÃÂ ÃÂ¸ÃÂ¼ÃÂµÃÂÃÂ ÃÂ±ÃÂÃÂºÃÂ²ÃÂ°
+    int max = (size * 2 + 1) - (index_x - size); 
     if (index_y == 1 && index_x >= size) {
         if (index_x == size) {
             coordinates.push_back(string(1, from[0]) + "2");
@@ -845,10 +907,16 @@ void Game::GenerateMoves(vector<string>& coordinates, string& from)
 }
 
 void Game::WinMove(bool is_print_all, bool is_print1) {
-    if (BlackPlayer.GetReserveStones() != 1) {
-        return;
-    }
     vector<string> coordinates = AllMoves(0);
+    if (coordinates.size() != 0 && is_print1) {
+        if (BlackPlayer.GetReserveStones() == 0 && is_white_turn) {
+            cout << "1_UNIQUE_MOVES" << endl;
+            return;
+        }else if (WhitePlayer.GetReserveStones() == 0 && !is_white_turn) {
+            cout << "1_UNIQUE_MOVES" << endl;
+            return;
+        }
+    }
     vector<string> win_moves;
     bool turn = is_white_turn;
     for (string i : coordinates) {
@@ -866,6 +934,12 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
         vector<string> second_turn = AllMoves(0);
         bool is = true;
         for (string j : second_turn) {
+            if (!is_white_turn && BlackPlayer.GetReserveStones() == 0) {
+                break;
+            }
+            else if (is_white_turn && WhitePlayer.GetReserveStones() == 0) {
+                break;
+            }
             int white_res = WhitePlayer.GetReserveStones(), black_res = BlackPlayer.GetReserveStones();
             string from1, to1;
             from1 = j.substr(0, 2);
@@ -875,7 +949,12 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
             ConvertCoordinate(to1, x_to, y_to);
             vector<vector<CellState>> board_copy2 = board;
             Move(x_to, y_to, to2, 1);
-            if (BlackPlayer.GetReserveStones() != 0) {
+            if (BlackPlayer.GetReserveStones() < 0) { BlackPlayer.SetReserveStones(0); }
+            if (WhitePlayer.GetReserveStones() < 0) {WhitePlayer.SetReserveStones(0);}
+            if (!is_white_turn && BlackPlayer.GetReserveStones() != 0) {
+                is = false;
+                break;
+            }else if (is_white_turn && WhitePlayer.GetReserveStones() != 0) {
                 is = false;
                 break;
             }
@@ -893,7 +972,7 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
     }
     is_white_turn = turn;
     if (is_print1 && win_moves.size() != 0) {
-        cout << "1" << endl;
+        cout << "1_UNIQUE_MOVES" << endl;
     }
     else if (is_print_all) {
         cout << win_moves.size() << endl;
@@ -902,7 +981,7 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
         cout << win_moves[0] << endl;
     }
     else {
-        cout << coordinates.size() << endl;
+        cout << coordinates.size() + delete_lines_counter << endl;
     }
 }
 
@@ -915,6 +994,7 @@ vector<string> Game::AllMoves(bool is_print_all_boards)
     vector<string> winning_moves;
     string state_copy = game_state;
     int max_point = size * 2;
+    delete_lines_counter = -1;
     while (max_point != -1) {
         int max;
         if (max_point <= size) {
@@ -1018,5 +1098,8 @@ vector<string> Game::AllMoves(bool is_print_all_boards)
         max_point--;
     }
     game_state = state_copy;
+    if (delete_lines_counter == -1) {
+        delete_lines_counter = 0;
+    }
     return move(coordinates);
 }

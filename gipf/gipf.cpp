@@ -72,7 +72,7 @@ void read_command(string& command, Game& game) {
         }
         game.DoMove(from, to, words);
     }
-    else if (command == "PRINT_GAME_STATE") {
+    else if (command == "IS_GAME_OVER") {
         game.PrintState();
     }
     else if (command == "GEN_ALL_POS_MOV") {
@@ -82,7 +82,7 @@ void read_command(string& command, Game& game) {
         game.WinMove(0, 0);
     }
     else if (command == "GEN_ALL_POS_MOV_NUM") {
-        cout << game.AllMoves(0).size() << "_UNIQUE_MOVES" << endl;
+        cout << game.AllMoves(0).size() + game.GetDeleteLines() << "_UNIQUE_MOVES" << endl;
     }
     else if (command == "GEN_ALL_POS_MOV_EXT_NUM") {
         game.WinMove(1, 1);

@@ -68,7 +68,7 @@ private:
     string game_state;
     bool is_white_turn, is_turn_committed, is_good_index, is_good_color;
     int size;
-    int stones_in_line;
+    int stones_in_line, delete_lines_counter;
     void ConvertCoordinate(string coo, int& x, int& y);
     void GenerateMoves(vector<string>& coordinates, string& from);
     void Move(int x, int y, vector<vector<Point>>& to_delete, bool is_test_move);
@@ -88,6 +88,7 @@ public:
     vector<string> AllMoves(bool is_print_all_boards);
     void WinMove(bool is_print_all, bool is_print1);
     Game();
+    int GetDeleteLines();
     Game(int size, Player& first, Player& second);
     void SetCell(int x, int y, CellState cell);
     void DrawWorld();
