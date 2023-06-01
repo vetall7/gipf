@@ -776,20 +776,11 @@ void Game::DoMove(string from, string to, vector<string>& delete_points)
         game_state = "bad_move";
     }
     if (WhitePlayer.GetReserveStones() == 0 && is_white_turn) {
-        game_state = "black win";
+        game_state = "THE_WINNER_IS_BLACK";
     }
     else if (BlackPlayer.GetReserveStones() == 0 && !is_white_turn) {
-        game_state = "white_win";
+        game_state = "THE_WINNER_IS_WHITE";
     }
-    /*if (game_state == "bad_move") {
-        if (board[y][x] == CellState::White) {
-            game_state += " <white> ";
-        }
-        else if (board[y][x] == CellState::Black) {
-            game_state += " <black> ";
-        }
-        game_state += "<" + from + "-" + to + ">";
-    }*/
 }
 
 void Game::SetTurn(bool turn)
@@ -820,7 +811,10 @@ void Game::PrintState()
     }
     else if (is_board_full) {
 		game_state = "THE_WINNER_IS_BLACK";
-	}
+    }
+    else {
+        game_state = "GAME_IN_PROGRESS";
+    }
     cout << game_state << endl;
 }
 
