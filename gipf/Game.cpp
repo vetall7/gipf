@@ -812,9 +812,6 @@ void Game::PrintState()
     else if (is_board_full) {
 		game_state = "THE_WINNER_IS_BLACK";
     }
-    else {
-        game_state = "GAME_IN_PROGRESS";
-    }
     cout << game_state << endl;
 }
 
@@ -911,6 +908,8 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
             return;
         }
     }
+    int white_stones = WhitePlayer.GetReserveStones(), black_stones = BlackPlayer.GetReserveStones();
+    vector<vector<Point>> to2;
     vector<string> win_moves;
     bool turn = is_white_turn;
     for (string i : coordinates) {
@@ -920,7 +919,6 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
         DirectionDetect(from, to);
         int x_to, y_to;
         ConvertCoordinate(to, x_to, y_to);
-        vector<vector<Point>> to2;
         vector<vector<CellState>> board_copy = board;
         Move(x_to, y_to, to2, 1);
         if (is_white_turn) is_white_turn = false;
@@ -964,6 +962,8 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
         }
         board = board_copy;
     }
+    WhitePlayer.SetReserveStones(white_stones);
+    BlackPlayer.SetReserveStones(black_stones);
     is_white_turn = turn;
     if (is_print1 && win_moves.size() != 0) {
         cout << "1_UNIQUE_MOVES" << endl;
@@ -973,6 +973,24 @@ void Game::WinMove(bool is_print_all, bool is_print1) {
     }
     else if (win_moves.size() != 0) {
         cout << win_moves[0] << endl;
+        int white_res = WhitePlayer.GetReserveStones(), black_res = BlackPlayer.GetReserveStones();
+        cout << white_res << " " << black_res << endl;
+        string from1, to1;
+        from1 = win_moves[0].substr(0, 2);
+        to1 = win_moves[0].substr(3, 4);
+        DirectionDetect(from1, to1);
+        int x_to, y_to;
+        ConvertCoordinate(to1, x_to, y_to);
+        vector<vector<CellState>> board_copy2 = board;
+        Move(x_to, y_to, to2, 1);
+        if (BlackPlayer.GetReserveStones() < 0) { BlackPlayer.SetReserveStones(0); }
+        if (WhitePlayer.GetReserveStones() < 0) { WhitePlayer.SetReserveStones(0); }
+        if (is_white_turn) is_white_turn = false;
+        else is_white_turn = true;
+        DrawWorld();
+        WhitePlayer.SetReserveStones(white_res);
+        BlackPlayer.SetReserveStones(black_res);
+        board = board_copy2;
     }
     else {
         cout << coordinates.size() + delete_lines_counter << endl;
