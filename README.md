@@ -31,3 +31,5 @@ In the generalized version of the GIPF game engine, the following parameters are
 - **GEN_ALL_POS_MOV_EXT_NUM:** Prints the number of all possible moves, but only one winning move if available.
 - **WINNING_SEQUENCE_EXIST \<N\>:** Answers whether there exists a winning sequence of moves of length less than or equal to N for any player.
 - **SOLVE_GAME_STATE:** Determines which player has a winning strategy for the given game state.
+
+![Map](example/example.png)
