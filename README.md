@@ -8,7 +8,7 @@ This project consists of two parts:
 
 2. **Game Solver:** The second part implements a program that solves the GIPF game or certain states of the game for different values of the parameters in list L. The solving algorithm primarily employs the minimax algorithm (or its variation, negamax) along with alpha-beta pruning.
 
-GIPF is a deterministic two-player game without random elements or hidden information, adhering to a zero-sum principle without draws. The official rules of the game can be found [here](official_rules_link). 
+GIPF is a deterministic two-player game without random elements or hidden information, adhering to a zero-sum principle without draws. The official rules of the game can be found [here]([official_rules_link](https://www.riograndegames.com/wp-content/uploads/2013/02/GIPF-Rules.pdf)). 
 
 ## Generalized Game Engine
 
